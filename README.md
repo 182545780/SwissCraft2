@@ -19,6 +19,12 @@
 | 演示数据 | 一键生成假选手和比赛数据，方便测试 |
 
 ---
+<img width="3600" height="2086" alt="05ac599ce2ff4dc373596ccc25c9a5a7" src="https://github.com/user-attachments/assets/03262c41-f9bb-4c74-aff0-a2090425611a" />
+<img width="3600" height="2086" alt="39323d0fdd63800bbae247c001e9f10e" src="https://github.com/user-attachments/assets/c432ebc5-37e1-4f0d-b73d-1aead4795023" />
+<img width="3600" height="2086" alt="51d542b7f4e7aa807ab87679e7b65bcf" src="https://github.com/user-attachments/assets/18627a0e-f464-4d3f-af72-2661f935cae4" />
+<img width="3600" height="2086" alt="9d8d29e4542481c77cd3e46eea1449ac" src="https://github.com/user-attachments/assets/001daaa8-40c6-4924-a3f4-5f454cb0999e" />
+<img width="3600" height="2086" alt="cabf161019158908c258df5a177aa618" src="https://github.com/user-attachments/assets/e0682234-902e-4df2-9ccf-68da8118f268" />
+
 
 ## 5分钟快速启动
 
