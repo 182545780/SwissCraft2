@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>录像管理 · DSB月赛杯</title>
+    <style>
+        :root {
+            --bg: #0a0e17;
+            --panel: #131a25;
+            --border: #2a3340;
+            --text: #d0d5dd;
+            --text-title: #fff;
+            --accent: #4a9eff;
+            --win: #1f9e5c;
+            --lose: #c44545;
+            --gold: #f0b90b;
+            --muted: #7c8798;
+            --radius: 8px;
+            --shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI','Inter',system-ui,-apple-system,sans-serif; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .topbar-brand {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+        }
+        .topbar-nav { display: flex; gap: 4px; }
+        .topbar-nav a {
+            color: var(--muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .topbar-nav a:hover,
+        .topbar-nav a.active {
+            color: #fff;
+            background: rgba(74,158,255,0.1);
+        }
+        .topbar-nav a.active { color: var(--accent); }
+
+        .hero-banner {
+            position: relative;
+            height: 180px;
+            background: linear-gradient(135deg, #0f1a2e 0%, #1a2540 40%, #0d1b30 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 50%, rgba(74,158,255,0.08) 0%, transparent 60%),
+                        radial-gradient(ellipse at 70% 30%, rgba(240,185,11,0.05) 0%, transparent 50%);
+        }
+        .hero-content { position: relative; z-index: 1; }
+        .hero-content h1 {
+            font-size: 2em;
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #4a9eff, #8bc4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 6px;
+        }
+        .hero-content p { color: var(--muted); font-size: 0.9em; }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 24px 16px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            box-shadow: var(--shadow);
+        }
+        .section-card h2 {
+            color: var(--text-title);
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 32px 24px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            background: rgba(74,158,255,0.03);
+        }
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: var(--accent);
+            background: rgba(74,158,255,0.08);
+        }
+        .upload-area p { color: var(--muted); font-size: 0.9rem; }
+        .upload-area .highlight { color: var(--accent); font-weight: 600; }
+        #fileInput { display: none; }
+
+        .upload-form-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .form-group { flex: 1; min-width: 150px; }
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .form-group input {
+            width: 100%;
+            height: 38px;
+            padding: 0 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .form-group input:focus { border-color: var(--accent); }
+
+        button {
+            background: #1e2b3f;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        button:hover { background: #2a3a52; border-color: var(--accent); color: #fff; }
+        button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+        button.primary:hover { background: #3a8cee; }
+        button.danger { border-color: var(--lose); color: var(--lose); }
+        button.danger:hover { background: #3a1e1e; border-color: #e05a5a; color: #e05a5a; }
+        button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .lock-btn {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .lock-btn.unlocked { border-color: var(--win); color: var(--win); }
+        .lock-btn:hover { background: #2a2a10; }
+        .lock-btn.unlocked:hover { background: #0f1a15; }
+
+        .video-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .video-table th {
+            text-align: left;
+            padding: 10px 12px;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+        .video-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .video-table tr:hover td { background: rgba(74,158,255,0.03); }
+        .video-table .name-cell { color: var(--text-title); font-weight: 600; }
+        .video-table .size-cell,
+        .video-table .time-cell,
+        .video-table .desc-cell { color: var(--muted); font-size: 0.85rem; }
+        .download-btn {
+            background: var(--win);
+            border-color: var(--win);
+            color: #fff;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .download-btn:hover { background: #27ae60; }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+        .empty-state p { font-size: 0.9rem; margin-top: 8px; }
+
+        #uploadMsg { min-height: 22px; margin-top: 8px; font-size: 0.85rem; }
+        .msg-success { color: var(--win); }
+        .msg-error { color: var(--lose); }
+
+        .folder-header {
+            margin-top: 20px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+            padding: 8px 4px;
+            border-radius: 6px;
+            transition: background 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .folder-header:hover { background: rgba(255,255,255,0.03); }
+        .folder-header:active { background: rgba(255,255,255,0.06); }
+        .folder-arrow {
+            font-size: 0.8rem;
+            color: var(--gold);
+            width: 18px;
+            flex-shrink: 0;
+            text-align: center;
+        }
+        .folder-title {
+            color: var(--gold);
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .folder-count {
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--muted);
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        @media (max-width: 768px) {
+            .hero-banner { height: 130px; }
+            .hero-content h1 { font-size: 1.3em; }
+            .container { padding: 16px 10px 40px; }
+            .section-card { padding: 14px 12px; }
+            .upload-form-row { flex-direction: column; }
+            .video-table { font-size: 0.75rem; }
+            .video-table th, .video-table td { padding: 6px 4px; }
+            .video-table { display: block; overflow-x: auto; }
+            .download-btn { padding: 4px 8px; font-size: 0.7rem; }
+            button { padding: 6px 12px; font-size: 0.8rem; }
+            .topbar { padding: 0 8px; height: 48px; }
+            .topbar-brand { font-size: 0.9rem; gap: 6px; }
+        .topbar-brand svg { color: var(--accent); width: 18px; height: 18px; }
+            .topbar-nav a { padding: 5px 8px; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topbar">
+    <a href="/" class="topbar-brand"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M15 4l5 5M4 15l5 5"/></svg>DSB月赛杯</a>
+    <div class="topbar-nav">
+        <a href="/">赛事章程</a>
+        <a href="/saicheng">积分榜</a>
+        <a href="/bracket">淘汰赛</a>
+        <a href="/videos" class="active">录像库</a>
+        <a href="/register">报名</a>
+        <a href="/admin" title="管理后台" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:40px;text-decoration:none;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(102,252,241,0.12)'" onmouseout="this.style.background=''"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#66fcf1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>    
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
+        <a href="#" onclick="switchLang('zh')" id="lang_zh" style="font-size:0.75rem;padding:4px 6px;border-radius:4px;text-decoration:none;color:var(--muted);font-weight:600;">中</a>
+        <span style="color:var(--muted);font-size:0.65rem;">|</span>
+        <a href="#" onclick="switchLang('en')" id="lang_en" style="font-size:0.75rem;padding:4px 6px;border-radius:4px;text-decoration:none;color:var(--muted);font-weight:600;">EN</a>
+    </div>
+</nav>
+
+<div class="hero-banner">
+    <div class="hero-content">
+        <h1>比赛录像库</h1>
+        <p>回放与复盘 · 星际争霸2 DSB月赛杯</p>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="section-card" id="lockSection" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <span style="color:var(--muted);font-size:0.9rem;">管理员操作需要解锁</span>
+        <button id="lockBtn" class="lock-btn" onclick="toggleLock()">点击解锁</button>
+    </div>
+
+    <div class="section-card" id="uploadSection" style="display:none;">
+        <h2>上传录像文件</h2>
+        <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <p>拖拽 .SC2Replay 文件到此处，或 <span class="highlight">点击选择文件</span></p>
+            <p style="margin-top:4px;font-size:0.8rem;">支持星际争霸2录像回放文件</p>
+        </div>
+        <input type="file" id="fileInput" accept=".SC2Replay,.sc2replay">
+        <div id="selectedFile" style="margin-top:10px;font-size:0.9rem;color:var(--accent);display:none;"></div>
+        <div class="upload-form-row">
+            <div class="form-group">
+                <label for="descInput">描述 (选填)</label>
+                <input type="text" id="descInput" placeholder="例如：决赛 Bo3 第三局">
+            </div>
+            <div class="form-group">
+                <label for="uploaderInput">上传者</label>
+                <input type="text" id="uploaderInput" placeholder="管理员" value="管理员">
+            </div>
+            <button class="primary" id="uploadBtn" onclick="doUpload()" disabled>上传</button>
+        </div>
+        <div id="uploadMsg"></div>
+    </div>
+
+    <div class="section-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);">
+            <h2 style="margin:0;font-size:1.1rem;font-weight:700;color:var(--text-title);">录像列表 <span style="font-size:0.8rem;color:var(--muted);font-weight:400;" id="videoCount"></span></h2>
+            <div style="position:relative;min-width:200px;">
+                <input type="text" id="searchInput" placeholder="搜索录像文件名..." style="width:100%;height:36px;padding:0 12px;padding-left:32px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;outline:none;box-sizing:border-box;" oninput="renderVideoList()">
+                <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:0.9rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+            </div>
+        </div>
+        <div id="videoListContainer">
+            <div class="empty-state"><p>暂无录像文件</p></div>
+        </div>
+    </div>
+
+</div>
+
+<div class="footer">DSB 月赛杯 · 星际争霸2 赛事系统 &copy; 2026</div>
+
+<script>
+    const ADMIN_PASSWORD = 'dsb2026';
+    let adminToken = null;
+    let selectedFile = null;
+
+    function isUnlocked() { return adminToken === ADMIN_PASSWORD; }
+
+    function updateLockUI() {
+        var btn = document.getElementById('lockBtn');
+        var upload = document.getElementById('uploadSection');
+        if (isUnlocked()) {
+            btn.textContent = '已解锁 (点击锁定)';
+            btn.className = 'lock-btn unlocked';
+            upload.style.display = 'block';
+        } else {
+            btn.textContent = '点击解锁';
+            btn.className = 'lock-btn';
+            upload.style.display = 'none';
+        }
+        renderVideoList();
+    }
+
+    async function toggleLock() {
+        if (isUnlocked()) { adminToken = null; updateLockUI(); return; }
+        var pw = prompt('请输入管理员密码：');
+        if (!pw) return;
+        try {
+            var res = await fetch('/api/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pw })
+            });
+            if (res.ok) {
+                var data = await res.json();
+                adminToken = data.token;
+            } else {
+                alert('密码错误');
+            }
+        } catch (e) { alert('网络错误'); }
+        updateLockUI();
+    }
+
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        selectedFile = e.target.files[0];
+        var el = document.getElementById('selectedFile');
+        var btn = document.getElementById('uploadBtn');
+        if (selectedFile) {
+            el.textContent = '已选择: ' + selectedFile.name + ' (' + formatSize(selectedFile.size) + ')';
+            el.style.display = 'block';
+            btn.disabled = false;
+        } else {
+            el.style.display = 'none';
+            btn.disabled = true;
+        }
+        document.getElementById('uploadMsg').textContent = '';
+    });
+
+    var dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('dragover'); });
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        var files = e.dataTransfer.files;
+        if (files.length > 0) {
+            document.getElementById('fileInput').files = files;
+            document.getElementById('fileInput').dispatchEvent(new Event('change'));
+        }
+    });
+
+    async function doUpload() {
+        if (!selectedFile || !isUnlocked()) return;
+        var btn = document.getElementById('uploadBtn');
+        var msg = document.getElementById('uploadMsg');
+        btn.disabled = true;
+        btn.textContent = '上传中...';
+        msg.textContent = '';
+
+        var formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('description', document.getElementById('descInput').value.trim());
+        formData.append('uploader', document.getElementById('uploaderInput').value.trim() || '管理员');
+
+        try {
+            var res = await fetch('/api/videos/upload', {
+                method: 'POST',
+                headers: { 'x-admin-password': adminToken },
+                body: formData
+            });
+            var data = await res.json();
+            if (data.ok) {
+                msg.innerHTML = '<span class="msg-success">上传成功</span>';
+                selectedFile = null;
+                document.getElementById('fileInput').value = '';
+                document.getElementById('selectedFile').style.display = 'none';
+                document.getElementById('descInput').value = '';
+                btn.disabled = true;
+                loadVideoList();
+            } else {
+                msg.innerHTML = '<span class="msg-error">上传失败</span>';
+            }
+        } catch (e) {
+            msg.innerHTML = '<span class="msg-error">网络错误: ' + e.message + '</span>';
+        }
+        btn.textContent = '上传';
+        btn.disabled = !selectedFile;
+    }
+
+    async function loadVideoList() {
+        try {
+            var res = await fetch('/api/videos');
+            var data = await res.json();
+            window._videos = data.videos || [];
+            renderVideoList();
+        } catch (e) { console.error('加载失败', e); }
+    }
+
+    var _foldState = {};
+
+    function toggleFolder(folder) {
+        _foldState[folder] = !_foldState[folder];
+        renderVideoList();
+    }
+
+    function renderVideoList() {
+        var videos = window._videos || [];
+        var container = document.getElementById('videoListContainer');
+        var countEl = document.getElementById('videoCount');
+        
+        // 搜索过滤
+        var searchVal = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+        if (searchVal) {
+            videos = videos.filter(function(v) {
+                return (v.original_name || '').toLowerCase().indexOf(searchVal) >= 0;
+            });
+        }
+        
+        countEl.textContent = '共 ' + videos.length + ' 个文件' + (searchVal ? ' (已过滤)' : '');
+
+        if (videos.length === 0) {
+            container.innerHTML = '<div class="empty-state"><p>暂无录像文件</p></div>';
+            return;
+        }
+
+        var unlocked = isUnlocked();
+
+        // 按 folder 分组
+        var groups = {};
+        videos.forEach(function(v) {
+            var folder = v.folder || '';
+            if (!groups[folder]) groups[folder] = [];
+            groups[folder].push(v);
+        });
+
+        var html = '';
+
+        // 按文件夹排序，空文件夹排最后
+        var folderNames = Object.keys(groups).sort(function(a, b) {
+            if (a === '') return 1;
+            if (b === '') return -1;
+            return a.localeCompare(b);
+        });
+
+        folderNames.forEach(function(folder) {
+            var groupVideos = groups[folder];
+            var isCollapsed = _foldState[folder] || false;
+
+            if (folder) {
+                var arrow = isCollapsed ? "+" : "-";
+                html += '<div class="folder-header" onclick="toggleFolder(\'' + folder + '\')">';
+                html += '<span class="folder-arrow">' + arrow + '</span>';
+                html += '<h3 class="folder-title">' + escHtml(folder) + '</h3>';
+                html += '<span class="folder-count">(' + groupVideos.length + ' 个文件)</span>';
+                html += '</div>';
+            }
+
+            if (!isCollapsed) {
+                html += '<table class="video-table"><thead><tr><th>文件名</th><th>上传者</th><th>描述</th><th>大小</th><th>时间</th><th>操作</th></tr></thead><tbody>';
+
+                groupVideos.forEach(function(v) {
+                    html += '<tr>';
+                    html += '<td class="name-cell">' + escHtml(v.original_name) + '</td>';
+                    html += '<td style="color:var(--muted);">' + escHtml(v.uploader || '') + '</td>';
+                    html += '<td class="desc-cell" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(v.description || '-') + '</td>';
+                    html += '<td class="size-cell">' + formatSize(v.file_size) + '</td>';
+                    html += '<td class="time-cell">' + escHtml(v.upload_time) + '</td>';
+                    html += '<td style="display:flex;gap:8px;">';
+                    html += '<a href="/api/videos/' + v.id + '/download" class="download-btn">下载</a>';
+                    if (unlocked) {
+                        html += '<button class="danger" onclick="deleteVideo(' + v.id + ')" style="padding:6px 14px;font-size:0.8rem;">删除</button>';
+                    }
+                    html += '</td></tr>';
+                });
+
+                html += '</tbody></table>';
+            }
+        });
+
+        container.innerHTML = html;
+    }
+
+    async function deleteVideo(id) {
+        if (!confirm('确定要删除这个录像文件吗？此操作不可恢复。')) return;
+        if (!isUnlocked()) return;
+        try {
+            var res = await fetch('/api/videos/' + id, {
+                method: 'DELETE',
+                headers: { 'x-admin-password': adminToken }
+            });
+            if (res.ok) { loadVideoList(); }
+            else { alert('删除失败'); }
+        } catch (e) { alert('网络错误'); }
+    }
+
+    function formatSize(bytes) {
+        if (!bytes) return '0 B';
+        var units = ['B', 'KB', 'MB', 'GB'];
+        var i = 0, size = bytes;
+        while (size >= 1024 && i < units.length - 1) { size /= 1024; i++; }
+        return size.toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
+    }
+
+    function escHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str || '';
+        return div.innerHTML;
+    }
+
+    updateLockUI();
+    loadVideoList();
+</script>
+</body>
+</html>

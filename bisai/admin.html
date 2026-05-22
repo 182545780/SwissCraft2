@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSB 管理仪表盘</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0a0e17;
+  color: #d0d5dd;
+  min-height: 100vh;
+}
+
+/* ---- 顶部 ---- */
+.topbar {
+  background: #131a25;
+  border-bottom: 1px solid #2a3340;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+.topbar h1 { font-size: 1.1rem; color: #fff; }
+.topbar .nav a {
+  color: #7c8798; text-decoration: none;
+  padding: 6px 14px; border-radius: 6px; font-size: 0.85rem;
+}
+.topbar .nav a:hover { color: #fff; background: rgba(74,158,255,0.1); }
+
+/* ---- 登录遮罩 ---- */
+#loginOverlay {
+  position: fixed; inset:0; background: rgba(0,0,0,0.85);
+  display: flex; align-items: center; justify-content: center; z-index:999;
+}
+#loginBox {
+  background: #1a2332; padding: 40px; border-radius: 12px;
+  border: 1px solid #2a3340; width: 360px; text-align: center;
+}
+#loginBox h2 { color: #fff; margin-bottom: 8px; }
+#loginBox p { color: #7c8798; font-size: 0.85rem; margin-bottom: 20px; }
+#loginBox input {
+  width:100%; padding:12px 16px; background:#0a0e17; border:1px solid #2a3340;
+  border-radius:8px; color:#fff; font-size:1rem; margin-bottom:12px;
+}
+#loginBox button {
+  width:100%; padding:12px; background:#4a9eff; border:none; border-radius:8px;
+  color:#fff; font-size:1rem; font-weight:600; cursor:pointer;
+}
+#loginError { color: #e74c3c; font-size: 0.85rem; margin-top: 8px; }
+
+/* ---- 仪表盘布局 ---- */
+.dashboard { display: none; padding: 24px; max-width: 1200px; margin: 0 auto; }
+.dashboard.active { display: block; }
+
+/* ---- 标签页 ---- */
+.tabs {
+  display: flex; gap: 4px; margin-bottom: 24px; flex-wrap: wrap;
+}
+.tab-btn {
+  padding: 10px 20px; background: transparent; border: none;
+  color: #7c8798; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  border-radius: 8px 8px 0 0; border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.tab-btn:hover { color: #d0d5dd; background: rgba(255,255,255,0.03); }
+.tab-btn.active { color: #4a9eff; border-bottom-color: #4a9eff; background: rgba(74,158,255,0.05); }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ---- 卡片 ---- */
+.card {
+  background: #131a25; border-radius: 10px; padding: 24px;
+  margin-bottom: 16px; border: 1px solid #2a3340;
+}
+.card h3 {
+  font-size: 1rem; color: #fff; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card h3 .badge {
+  font-size: 0.7rem; background: rgba(74,158,255,0.15); color: #4a9eff;
+  padding: 2px 8px; border-radius: 10px; font-weight: 400;
+}
+
+/* ---- 表单 ---- */
+.form-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+.form-group { margin-bottom: 12px; }
+.form-group label {
+  display: block; font-size: 0.8rem; color: #7c8798; margin-bottom: 4px;
+}
+.form-group input, .form-group textarea, .form-group select {
+  width:100%; padding:8px 12px; background:#0a0e17; border:1px solid #2a3340;
+  border-radius:6px; color:#fff; font-size:0.9rem;
+}
+.form-group input:focus, .form-group textarea:focus {
+  border-color: #4a9eff; outline: none;
+}
+.form-group textarea { resize: vertical; min-height: 60px; }
+.form-group input[type="color"] {
+  height: 40px; padding: 4px; cursor: pointer;
+}
+
+/* ---- 按钮 ---- */
+.btn {
+  padding: 8px 20px; border: none; border-radius: 6px; font-size: 0.85rem;
+  font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary { background: #4a9eff; color: #fff; }
+.btn-primary:hover { background: #3a8eef; }
+.btn-success { background: #1f9e5c; color: #fff; }
+.btn-success:hover { background: #188e4c; }
+.btn-danger { background: #c44545; color: #fff; }
+.btn-danger:hover { background: #b43535; }
+.btn-warning { background: #d4a017; color: #fff; }
+.btn-warning:hover { background: #c49007; }
+.btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+.btn-outline {
+  background: transparent; border: 1px solid #2a3340; color: #7c8798;
+}
+.btn-outline:hover { border-color: #4a9eff; color: #4a9eff; }
+.btn-ghost { background: transparent; color: #7c8798; }
+.btn-ghost:hover { background: rgba(255,255,255,0.05); color: #fff; }
+
+/* ---- 颜色预览 ---- */
+.color-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+}
+.color-preview {
+  width: 32px; height: 32px; border-radius: 6px; border: 1px solid #2a3340;
+  flex-shrink: 0;
+}
+
+/* ---- 表格 ---- */
+.data-table {
+  width:100%; border-collapse: collapse; font-size: 0.85rem;
+}
+.data-table th {
+  text-align: left; padding: 10px 12px; background: rgba(255,255,255,0.03);
+  color: #7c8798; font-weight: 600; border-bottom: 1px solid #2a3340;
+}
+.data-table td {
+  padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* ---- Toast ---- */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; padding: 14px 24px;
+  border-radius: 8px; color: #fff; font-weight: 600; font-size: 0.9rem;
+  z-index: 1000; opacity: 0; transform: translateY(20px);
+  transition: all 0.3s;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { background: #1f9e5c; }
+.toast.error { background: #c44545; }
+.toast.info { background: #4a9eff; }
+
+/* ---- 文件上传区 ---- */
+.upload-zone {
+  border: 2px dashed #2a3340; border-radius: 10px; padding: 30px;
+  text-align: center; cursor: pointer; transition: all 0.3s;
+}
+.upload-zone:hover { border-color: #4a9eff; background: rgba(74,158,255,0.03); }
+.upload-zone.dragover { border-color: #4a9eff; background: rgba(74,158,255,0.08); }
+.upload-zone input { display: none; }
+
+/* ---- 响应式 ---- */
+@media (max-width: 768px) {
+  .dashboard { padding: 12px; }
+  .form-grid, .form-grid.three { grid-template-columns: 1fr; }
+  .tabs { overflow-x: auto; flex-wrap: nowrap; }
+  .tab-btn { white-space: nowrap; font-size: 0.8rem; padding: 8px 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<nav class="topbar">
+  <h1><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#66fcf1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin-right:8px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> SwissCraft</h1>
+  <div class="nav">
+    <a href="/" target="_blank">查看首页</a>
+    <a href="#" id="logoutBtn" style="display:none;">退出</a>
+  </div>
+    <div style="display:flex;align-items:center;gap:4px;margin-left:12px;">
+        <a href="/" style="font-size:0.8rem;color:#7c8798;text-decoration:none;padding:4px 8px;border-radius:4px;" target="_blank">首页</a>
+        <span style="color:#2a3340;">|</span>
+        <a href="#" onclick="switchLang('zh')" id="lang_zh" style="font-size:0.75rem;padding:4px 6px;border-radius:4px;text-decoration:none;color:#66fcf1;font-weight:600;">中</a>
+        <span style="color:#2a3340;font-size:0.65rem;">|</span>
+        <a href="#" onclick="switchLang('en')" id="lang_en" style="font-size:0.75rem;padding:4px 6px;border-radius:4px;text-decoration:none;color:#7c8798;font-weight:600;">EN</a>
+    </div>
+</nav>
+
+<!-- 登录 -->
+<div id="loginOverlay">
+  <div id="loginBox">
+    <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> 管理员登录</h2>
+    <p>输入管理员密码进入仪表盘</p>
+    <input type="password" id="pwdInput" placeholder="管理员密码" autofocus>
+    <button onclick="login()">登录</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<!-- 仪表盘主体 -->
+<div class="dashboard" id="dashboardMain">
+  <!-- 标签页 -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="content"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> 页面内容</button>
+    <button class="tab-btn" data-tab="theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="0.5" fill="currentColor"/><circle cx="17.5" cy="10.5" r="0.5" fill="currentColor"/><circle cx="8.5" cy="7.5" r="0.5" fill="currentColor"/><circle cx="6.5" cy="12.5" r="0.5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-1 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.5-4.5-10-10-10z"/></svg> 样式主题</button>
+    <button class="tab-btn" data-tab="tournament"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg> 赛事管理</button>
+    <button class="tab-btn" data-tab="register"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> 报名管理</button>
+    <button class="tab-btn" data-tab="videos"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/><line x1="17" y1="17" x2="22" y2="17"/></svg> 录像管理</button>
+    <button class="tab-btn" data-tab="settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> 系统设置</button>
+  </div>
+
+  <!-- ====== 面板1: 页面内容 ====== -->
+  <div class="tab-panel active" id="tab-content">
+    <div class="card">
+      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> 首页头图</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>大标题</label>
+          <input type="text" id="c_site_title" data-key="site_title">
+        </div>
+        <div class="form-group">
+          <label>副标题</label>
+          <input type="text" id="c_site_subtitle" data-key="site_subtitle">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Banner 图片路径</label>
+        <input type="text" id="c_hero_banner_bg" data-key="hero_banner_bg">
+      </div>
+      <div class="upload-zone" onclick="document.getElementById('bannerFile').click()">
+        <p style="font-size:1.5rem; margin-bottom:8px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></p>
+        <p>点击上传新的 Banner 图片</p>
+        <p style="font-size:0.8rem; color:#7c8798;">支持 PNG/JPG，建议宽度 1920px</p>
+        <input type="file" id="bannerFile" accept="image/*" onchange="uploadBanner(this)">
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> 赛事概况</h3>
+      <div class="form-grid">
+        <div class="form-group"><label>比赛名称</label><input type="text" id="c_tournament_name" data-key="tournament_name"></div>
+        <div class="form-group"><label>游戏版本</label><input type="text" id="c_game_version" data-key="game_version"></div>
+        <div class="form-group"><label>服务器</label><input type="text" id="c_game_server" data-key="game_server"></div>
+        <div class="form-group"><label>比赛模式</label><input type="text" id="c_game_mode" data-key="game_mode"></div>
+        <div class="form-group"><label>参赛人数</label><input type="text" id="c_max_players" data-key="max_players"></div>
+        <div class="form-group"><label>总奖池</label><input type="text" id="c_prize_pool" data-key="prize_pool"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 赛程时间</h3>
+      <div class="form-grid three">
+        <div class="form-group"><label>报名截止</label><input type="text" id="c_reg_deadline" data-key="reg_deadline"></div>
+        <div class="form-group"><label>瑞士轮阶段</label><input type="text" id="c_swiss_start" data-key="swiss_start"></div>
+        <div class="form-group"><label>淘汰赛阶段</label><input type="text" id="c_bracket_start" data-key="bracket_start"></div>
+      </div>
+      <h3 style="margin-top:16px; font-size:0.9rem;">每轮时间</h3>
+      <div class="form-grid three">
+        <div class="form-group"><label>第1轮 开始</label><input type="text" id="c_round1_start" data-key="round1_start"></div>
+        <div class="form-group"><label>第1轮 截止</label><input type="text" id="c_round1_end" data-key="round1_end"></div>
+        <div class="form-group"></div>
+        <div class="form-group"><label>第2轮 开始</label><input type="text" id="c_round2_start" data-key="round2_start"></div>
+        <div class="form-group"><label>第2轮 截止</label><input type="text" id="c_round2_end" data-key="round2_end"></div>
+        <div class="form-group"></div>
+        <div class="form-group"><label>第3轮 开始</label><input type="text" id="c_round3_start" data-key="round3_start"></div>
+        <div class="form-group"><label>第3轮 截止</label><input type="text" id="c_round3_end" data-key="round3_end"></div>
+        <div class="form-group"></div>
+        <div class="form-group"><label>第4轮 开始</label><input type="text" id="c_round4_start" data-key="round4_start"></div>
+        <div class="form-group"><label>第4轮 截止</label><input type="text" id="c_round4_end" data-key="round4_end"></div>
+        <div class="form-group"></div>
+        <div class="form-group"><label>第5轮 开始</label><input type="text" id="c_round5_start" data-key="round5_start"></div>
+        <div class="form-group"><label>第5轮 截止</label><input type="text" id="c_round5_end" data-key="round5_end"></div>
+        <div class="form-group"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> 奖金分配</h3>
+      <div class="form-grid three">
+        <div class="form-group"><label>冠军</label><input type="text" id="c_prize_1st" data-key="prize_1st"></div>
+        <div class="form-group"><label>亚军</label><input type="text" id="c_prize_2nd" data-key="prize_2nd"></div>
+        <div class="form-group"><label>季军</label><input type="text" id="c_prize_3rd" data-key="prize_3rd"></div>
+        <div class="form-group"><label>殿军</label><input type="text" id="c_prize_4th" data-key="prize_4th"></div>
+        <div class="form-group"><label>5-8名</label><input type="text" id="c_prize_5_8" data-key="prize_5_8"></div>
+        <div class="form-group"><label>9-24名</label><input type="text" id="c_prize_9_24" data-key="prize_9_24"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> 联系方式</h3>
+      <div class="form-group">
+        <label>页脚信息</label>
+        <input type="text" id="c_contact_info" data-key="contact_info">
+      </div>
+    </div>
+
+    <div style="display:flex; gap:12px; margin-bottom:24px;">
+      <button class="btn btn-primary" onclick="saveContent()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> 保存全部内容</button>
+      <button class="btn btn-warning" onclick="resetContent()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 恢复默认</button>
+    </div>
+  </div>
+
+  <!-- ====== 面板2: 样式主题 ====== -->
+  <div class="tab-panel" id="tab-theme">
+    <div class="card">
+      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="0.5" fill="currentColor"/><circle cx="17.5" cy="10.5" r="0.5" fill="currentColor"/><circle cx="8.5" cy="7.5" r="0.5" fill="currentColor"/><circle cx="6.5" cy="12.5" r="0.5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-1 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.5-4.5-10-10-10z"/></svg> 颜色主题</h3>
+      <p style="font-size:0.85rem; color:#7c8798; margin-bottom:16px;">改颜色 -> 点保存 -> 刷新首页看效果</p>
+      <div class="form-grid three">
+        <div class="form-group">
+          <label>页面背景</label>
+          <div class="color-row">
+            <div class="color-preview" id="preview_theme_bg"></div>
+            <input type="color" id="c_theme_bg" data-key="theme_bg" onchange="updatePreview(this)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>卡片背景</label>
+          <div class="color-row">
+            <div class="color-preview" id="preview_theme_container"></div>
+            <input type="color" id="c_theme_container" data-key="theme_container" onchange="updatePreview(this)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>正文颜色</label>
+          <div class="color-row">
+            <div class="color-preview" id="preview_theme_text"></div>
+            <input type="color" id="c_theme_text" data-key="theme_text" onchange="updatePreview(this)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>标题颜色</label>
+          <div class="color-row">
+            <div class="color-preview" id="preview_theme_title"></div>
+            <input type="color" id="c_theme_title" data-key="theme_title" onchange="updatePreview(this)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>强调色(蓝)</label>
+          <div class="color-row">
+            <div class="color-preview" id="preview_theme_accent"></div>
+            <input type="color" id="c_theme_accent" data-key="theme_accent" onchange="updatePreview(this)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>强调色(暗蓝)</label>
+          <div class="color-row">
+            <div class="color-preview" id="preview_theme_accent_dim"></div>
+            <input type="color" id="c_theme_accent_dim" data-key="theme_accent_dim" onchange="updatePreview(this)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>金色</label>
+          <div class="color-row">
+            <div class="color-preview" id="preview_theme_gold"></div>
+            <input type="color" id="c_theme_gold" data-key="theme_gold" onchange="updatePreview(this)">
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveContent()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> 保存主题颜色</button>
+  </div>
+
+  <!-- ====== 面板3: 赛事管理 ====== -->
+  <div class="tab-panel" id="tab-tournament">
+    <div class="card">
+      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg> 瑞士轮状态</h3>
+      <div id="tournamentStatus" style="margin-bottom:16px;">
+        <p>加载中...</p>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-success" onclick="nextRound()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg> 生成下一轮</button>
+        <button class="btn btn-danger" onclick="resetTournament()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 重置所有比赛</button>
+        <button class="btn btn-outline" onclick="refreshState()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 刷新状态</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>当前轮次比赛</h3>
+      <table class="data-table">
+        <thead><tr><th>比赛ID</th><th>选手1</th><th>选手2</th><th>胜者</th><th>操作</th></tr></thead>
+        <tbody id="matchesBody">
+          <tr><td colspan="5" style="text-align:center;color:#7c8798;">暂无比赛</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> 积分榜</h3>
+      <table class="data-table">
+        <thead><tr><th>#</th><th>选手</th><th>MMR</th><th>种族</th><th>胜场</th><th>对手分</th></tr></thead>
+        <tbody id="standingsBody">
+          <tr><td colspan="6" style="text-align:center;color:#7c8798;">暂无数据</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> 八强淘汰赛</h3>
+      <button class="btn btn-success" onclick="generateBracket()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> 生成八强对阵</button>
+      <button class="btn btn-danger" onclick="resetBracket()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 重置淘汰赛</button>
+      <div id="bracketDisplay" style="margin-top:16px;"></div>
+    </div>
+  </div>
+
+  <!-- ====== 面板4: 报名管理 ====== -->
+  <div class="tab-panel" id="tab-register">
+    <div class="card">
+      <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> 报名设置</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>报名标题</label>
+          <input type="text" id="reg_title" data-rkey="title">
+        </div>
+        <div class="form-group">
+          <label>最大名额</label>
+          <input type="number" id="reg_max_slots" data-rkey="max_slots">
+        </div>
+        <div class="form-group">
+          <label>报名通道</label>
+          <select id="reg_open" data-rkey="open">
+            <option value="true">开放中</option>
+            <option value="false">已关闭</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>描述</label>
+          <input type="text" id="reg_description" data-rkey="description">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="saveRegConfig()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> 保存报名设置</button>
+    </div>
+
+    <div class="card">
+      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> 已报名选手 <span class="badge" id="regCount">0</span></h3>
+      <table class="data-table">
+        <thead><tr><th>ID</th><th>名称</th><th>MMR</th><th>种族</th><th>备注</th><th>时间</th><th>操作</th></tr></thead>
+        <tbody id="registrationsBody">
+          <tr><td colspan="7" style="text-align:center;color:#7c8798;">暂无报名</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ====== 面板5: 录像管理 ====== -->
+  <div class="tab-panel" id="tab-videos">
+    <div class="card">
+      <h3><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> 上传录像</h3>
+      <div class="upload-zone" onclick="document.getElementById('videoFile').click()">
+        <p style="font-size:1.5rem; margin-bottom:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/><line x1="17" y1="17" x2="22" y2="17"/></svg></p>
+        <p>点击选择 .SC2Replay 文件上传</p>
+        <input type="file" id="videoFile" accept=".SC2Replay,.zip" onchange="uploadVideo(this)">
+      </div>
+      <div class="form-grid" style="margin-top:12px;">
+        <div class="form-group"><label>上传者</label><input type="text" id="videoUploader" placeholder="管理员"></div>
+        <div class="form-group"><label>描述</label><input type="text" id="videoDesc" placeholder="比赛描述"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/><line x1="17" y1="17" x2="22" y2="17"/></svg> 录像列表</h3>
+      <table class="data-table">
+        <thead><tr><th>ID</th><th>文件名</th><th>上传者</th><th>大小</th><th>描述</th><th>操作</th></tr></thead>
+        <tbody id="videosBody">
+          <tr><td colspan="6" style="text-align:center;color:#7c8798;">暂无录像</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ====== 面板6: 系统设置 ====== -->
+  <div class="tab-panel" id="tab-settings">
+    <div class="card">
+      <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> 修改管理员密码</h3>
+      <div class="form-grid three">
+        <div class="form-group"><label>当前密码</label><input type="password" id="oldPwd"></div>
+        <div class="form-group"><label>新密码</label><input type="password" id="newPwd"></div>
+        <div class="form-group"><label>确认新密码</label><input type="password" id="confirmPwd"></div>
+      </div>
+      <button class="btn btn-warning" onclick="changePassword()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> 修改密码</button>
+    </div>
+
+    <div class="card">
+      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> 系统信息</h3>
+      <div id="sysInfo">
+        <p style="color:#7c8798;">加载中...</p>
+      </div>
+    </div>
+
+        <div class="card" style="border-color: #4a9eff;">
+      <h3>🚀 演示数据</h3>
+      <p style="font-size:0.85rem;color:#7c8798;margin-bottom:12px;">一键生成假选手和比赛数据，方便展示系统功能</p>
+      <button class="btn btn-success" onclick="generateDemo()">🎲 生成演示数据</button>
+      <button class="btn btn-danger" onclick="resetDemo()">🗑 清除所有数据</button>
+      <div id="demoResult" style="margin-top:8px;font-size:0.85rem;"></div>
+    </div>
+
+    <div class="card" style="border-color: #c44545;">
+      <h3 style="color:#c44545;">⚠ 危险操作</h3>
+      <p style="font-size:0.85rem;color:#7c8798;margin-bottom:12px;">以下操作不可撤销，请谨慎使用</p>
+      <button class="btn btn-danger" onclick="if(confirm('确定要重置所有比赛数据吗？')) resetTournament()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 重置所有比赛</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ==== 全局状态 ====
+const API_BASE = '';
+let ADMIN_PWD = '';
+
+// ==== 登录 ====
+async function login() {
+  const pwd = document.getElementById('pwdInput').value;
+  try {
+    const res = await fetch(API_BASE + '/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
+    });
+    if (!res.ok) { throw new Error('密码错误'); }
+    ADMIN_PWD = pwd;
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('dashboardMain').classList.add('active');
+    document.getElementById('logoutBtn').style.display = 'inline';
+    showToast('登录成功 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', 'success');
+    loadAll();
+  } catch(e) {
+    document.getElementById('loginError').innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message;
+  }
+}
+
+document.getElementById('pwdInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') login();
+});
+
+// ==== 标签切换 ====
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ==== Toast ====
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.innerHTML = msg; t.className = 'toast ' + type;
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ==== 加载所有数据 ====
+async function loadAll() {
+  loadContent();
+  loadState();
+  loadRegConfig();
+  loadRegistrations();
+  loadVideos();
+  loadSysInfo();
+}
+
+// ===== 内容管理 =====
+async function loadContent() {
+  try {
+    const res = await fetch(API_BASE + '/api/dashboard/content');
+    const data = await res.json();
+    document.querySelectorAll('[data-key]').forEach(el => {
+      const key = el.dataset.key;
+      if (data[key] !== undefined) {
+        el.value = data[key];
+        // 更新颜色预览
+        if (key.startsWith('theme_')) {
+          const preview = document.getElementById('preview_' + key);
+          if (preview) preview.style.background = data[key];
+        }
+      }
+    });
+  } catch(e) { console.error('loadContent error:', e); }
+}
+
+async function saveContent() {
+  const updates = {};
+  document.querySelectorAll('[data-key]').forEach(el => {
+    updates[el.dataset.key] = el.value;
+  });
+  try {
+    const res = await fetch(API_BASE + '/api/dashboard/content', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Password': ADMIN_PWD },
+      body: JSON.stringify(updates)
+    });
+    if (!res.ok) throw new Error('保存失败');
+    showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 内容已保存！刷新首页查看效果', 'success');
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+async function resetContent() {
+  if (!confirm('确定恢复所有内容为默认值？')) return;
+  try {
+    const res = await fetch(API_BASE + '/api/dashboard/reset', {
+      method: 'POST',
+      headers: { 'X-Admin-Password': ADMIN_PWD }
+    });
+    if (!res.ok) throw new Error('重置失败');
+    showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 已恢复默认', 'success');
+    loadContent();
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+function updatePreview(el) {
+  const key = el.dataset.key;
+  const preview = document.getElementById('preview_' + key);
+  if (preview) preview.style.background = el.value;
+}
+
+async function uploadBanner(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const res = await fetch(API_BASE + '/api/dashboard/upload-banner', {
+      method: 'POST',
+      headers: { 'X-Admin-Password': ADMIN_PWD },
+      body: form
+    });
+    if (!res.ok) throw new Error('上传失败');
+    const data = await res.json();
+    document.getElementById('c_hero_banner_bg').value = data.url;
+    showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Banner 上传成功！', 'success');
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+// ===== 赛事状态 =====
+async function loadState() {
+  try {
+    const res = await fetch(API_BASE + '/api/state');
+    const state = await res.json();
+    
+    const statusDiv = document.getElementById('tournamentStatus');
+    statusDiv.innerHTML = `
+      <p>当前轮次: <strong>${state.current_round} / ${state.total_rounds}</strong>
+      ${state.finished ? ' <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> 已完结' : state.round_complete ? ' <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 本轮已完成' : ' <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 进行中'}</p>
+      <p>选手数量: ${state.players.length} | 比赛场次: ${state.pairings.length}</p>
+    `;
+
+    // 匹配列表
+    const tbody = document.getElementById('matchesBody');
+    if (state.pairings.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#7c8798;">暂无比赛</td></tr>';
+    } else {
+      const playerMap = {};
+      state.players.forEach(p => { playerMap[p.id] = p.name; });
+      
+      tbody.innerHTML = state.pairings.map(m => `
+        <tr>
+          <td>${m.id}</td>
+          <td>${playerMap[m.player1_id] || '?'}</td>
+          <td>vs ${playerMap[m.player2_id] || '?'}</td>
+          <td>${m.winner_id ? (playerMap[m.winner_id] || '?') : '待定'}</td>
+          <td>
+            ${m.winner_id ? 
+              `<button class="btn btn-sm btn-danger" onclick="undoMatch('${m.id}')">↩ 撤销</button>` :
+              `<button class="btn btn-sm btn-success" onclick="recordResult('${m.id}', ${m.player1_id})">${playerMap[m.player1_id]}</button>
+               <button class="btn btn-sm btn-success" onclick="recordResult('${m.id}', ${m.player2_id})">${playerMap[m.player2_id]}</button>`
+            }
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 积分榜
+    const sbody = document.getElementById('standingsBody');
+    sbody.innerHTML = state.standings.map(s => `
+      <tr>
+        <td>${s.rank}</td>
+        <td>${s.name}</td>
+        <td>${s.mmr}</td>
+        <td>${raceEmoji(s.race)}</td>
+        <td>${s.wins}</td>
+        <td>${s.opponent_score}</td>
+      </tr>
+    `).join('');
+
+    // 八强
+    loadBracketDisplay();
+  } catch(e) { console.error('loadState error:', e); }
+}
+
+function raceEmoji(r) {
+  const map = { z:'<img src="/image/zerg.svg" alt="Z" class="race-icon" style="width:16px;height:16px;vertical-align:middle;">', p:'<img src="/image/protoss.svg" alt="P" class="race-icon" style="width:16px;height:16px;vertical-align:middle;">', t:'<img src="/image/terran.svg" alt="T" class="race-icon" style="width:16px;height:16px;vertical-align:middle;">', Z:'<img src="/image/zerg.svg" alt="Z" class="race-icon" style="width:16px;height:16px;vertical-align:middle;">', P:'<img src="/image/protoss.svg" alt="P" class="race-icon" style="width:16px;height:16px;vertical-align:middle;">', T:'<img src="/image/terran.svg" alt="T" class="race-icon" style="width:16px;height:16px;vertical-align:middle;">' };
+  return map[r] || r || '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+}
+
+async function refreshState() { loadState(); showToast('已刷新', 'info'); }
+
+async function nextRound() {
+  try {
+    const res = await fetch(API_BASE + '/api/next-round', {
+      method: 'POST', headers: { 'X-Admin-Password': ADMIN_PWD }
+    });
+    if (!res.ok) throw new Error('操作失败');
+    showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 已生成下一轮', 'success');
+    loadState();
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+async function recordResult(matchId, winnerId) {
+  if (!confirm('确定记录此结果？')) return;
+  try {
+    const res = await fetch(API_BASE + `/api/record-result/${matchId}?winner_id=${winnerId}`, {
+      method: 'POST', headers: { 'X-Admin-Password': ADMIN_PWD }
+    });
+    if (!res.ok) throw new Error('记录失败');
+    showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 结果已记录', 'success');
+    loadState();
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+async function undoMatch(matchId) {
+  if (!confirm('撤销此场比赛结果？')) return;
+  try {
+    const res = await fetch(API_BASE + `/api/undo-result/${matchId}`, {
+      method: 'POST', headers: { 'X-Admin-Password': ADMIN_PWD }
+    });
+    if (!res.ok) throw new Error('撤销失败');
+    showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 已撤销', 'success');
+    loadState();
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+async function resetTournament() {
+  if (!confirm('⚠ 确定要重置所有比赛数据？此操作不可撤销！')) return;
+  try {
+    const res = await fetch(API_BASE + '/api/reset', {
+      method: 'POST', headers: { 'X-Admin-Password': ADMIN_PWD }
+    });
+    if (!res.ok) throw new Error('重置失败');
+    showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 已重置', 'success');
+    loadState();
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+// ===== 八强 =====
+async function loadBracketDisplay() {
+  try {
+    const res = await fetch(API_BASE + '/api/bracket');
+    const data = await res.json();
+    const div = document.getElementById('bracketDisplay');
+    if (!data.matches || data.matches.length === 0) {
+      div.innerHTML = '<p style="color:#7c8798;">尚未生成八强对阵</p>';
+      return;
+    }
+    div.innerHTML = '<table class="data-table"><thead><tr><th>场次</th><th>选手1</th><th>比数</th><th>选手2</th><th>操作</th></tr></thead><tbody>' +
+      data.matches.map(m => `
+        <tr>
+          <td>${m.slot || m.id || '?'}</td>
+          <td>${m.player1_name || '?'} ${raceEmoji(m.player1_race)}</td>
+          <td>${m.winner_name ? m.winner_name + ' 胜' : '待定'}</td>
+          <td>${raceEmoji(m.player2_race)} ${m.player2_name || '?'}</td>
+          <td>
+            ${!m.winner_id && m.player1_id ? `
+              <button class="btn btn-sm btn-success" onclick="setBracketResult('${m.slot || m.id}', ${m.player1_id})">${m.player1_name}</button>
+              <button class="btn btn-sm btn-success" onclick="setBracketResult('${m.slot || m.id}', ${m.player2_id})">${m.player2_name}</button>
+            ` : m.winner_name ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg> ${m.winner_name}` : '等待选手'}
+          </td>
+        </tr>
+      `).join('') + '</tbody></table>';
+  } catch(e) { console.error(e); }
+}
+
+async function generateBracket() {
+  if (!confirm('根据当前排名生成八强对阵？')) return;
+  try {
+    const res = await fetch(API_BASE + '/api/bracket/generate', {
+      method: 'POST', headers: { 'X-Admin-Password': ADMIN_PWD }
+    });
+    if (!res.ok) throw new Error('生成失败');
+    showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 八强对阵已生成', 'success');
+    loadBracketDisplay();
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+async function setBracketResult(slot, winnerId) {
+  if (!confirm('确定此结果？')) return;
+  try {
+    const res = await fetch(API_BASE + `/api/bracket/result/${slot}?winner_id=${winnerId}&score1=2&score2=0`, {
+      method: 'POST', headers: { 'X-Admin-Password': ADMIN_PWD }
+    });
+    if (!res.ok) throw new Error('记录失败');
+    showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 已记录', 'success');
+    loadBracketDisplay();
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+async function resetBracket() {
+  if (!confirm('重置淘汰赛？')) return;
+  try {
+    const res = await fetch(API_BASE + '/api/bracket/reset', {
+      method: 'POST', headers: { 'X-Admin-Password': ADMIN_PWD }
+    });
+    if (!res.ok) throw new Error('重置失败');
+    showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 已重置', 'success');
+    loadBracketDisplay();
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+// ===== 报名管理 =====
+async function loadRegConfig() {
+  try {
+    const res = await fetch(API_BASE + '/api/register/config');
+    const config = await res.json();
+    document.querySelectorAll('[data-rkey]').forEach(el => {
+      if (config[el.dataset.rkey] !== undefined) el.value = config[el.dataset.rkey];
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function saveRegConfig() {
+  const updates = {};
+  document.querySelectorAll('[data-rkey]').forEach(el => {
+    updates[el.dataset.rkey] = el.value;
+  });
+  try {
+    for (const [key, value] of Object.entries(updates)) {
+      await fetch(API_BASE + '/api/register/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': ADMIN_PWD },
+        body: JSON.stringify({ key, value })
+      });
+    }
+    showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 报名设置已保存', 'success');
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+async function loadRegistrations() {
+  try {
+    const res = await fetch(API_BASE + '/api/register/list');
+    const data = await res.json();
+    document.getElementById('regCount').textContent = data.count || 0;
+    const tbody = document.getElementById('registrationsBody');
+    if (!data.registrations || data.registrations.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#7c8798;">暂无报名</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.registrations.map(r => `
+      <tr>
+        <td>${r.id}</td>
+        <td>${r.name}</td>
+        <td>${r.mmr}</td>
+        <td>${raceEmoji(r.race)}</td>
+        <td>${r.comment || '-'}</td>
+        <td>${r.created_at || '-'}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="deleteReg(${r.id})">删除</button></td>
+      </tr>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function deleteReg(id) {
+  if (!confirm('删除此报名？')) return;
+  try {
+    await fetch(API_BASE + '/api/register/' + id, {
+      method: 'DELETE', headers: { 'X-Admin-Password': ADMIN_PWD }
+    });
+    showToast('已删除', 'info');
+    loadRegistrations();
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+// ===== 录像管理 =====
+async function uploadVideo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const form = new FormData();
+  form.append('file', file);
+  form.append('uploader', document.getElementById('videoUploader').value || '管理员');
+  form.append('description', document.getElementById('videoDesc').value || '');
+  try {
+    const res = await fetch(API_BASE + '/api/videos/upload', {
+      method: 'POST',
+      headers: { 'X-Admin-Password': ADMIN_PWD },
+      body: form
+    });
+    if (!res.ok) throw new Error('上传失败');
+    showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 录像上传成功', 'success');
+    loadVideos();
+    document.getElementById('videoDesc').value = '';
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+async function loadVideos() {
+  try {
+    const res = await fetch(API_BASE + '/api/videos');
+    const data = await res.json();
+    const tbody = document.getElementById('videosBody');
+    if (!data.videos || data.videos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#7c8798;">暂无录像</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.videos.map(v => `
+      <tr>
+        <td>${v.id}</td>
+        <td>${v.original_name || v.filename}</td>
+        <td>${v.uploader || '-'}</td>
+        <td>${v.file_size ? (v.file_size/1024).toFixed(1) + 'KB' : '-'}</td>
+        <td>${v.description || '-'}</td>
+        <td>
+          <a href="${API_BASE}/api/videos/${v.id}/download" class="btn btn-sm btn-outline">下载</a>
+          <button class="btn btn-sm btn-danger" onclick="deleteVideo(${v.id})">删除</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function deleteVideo(id) {
+  if (!confirm('删除此录像？')) return;
+  try {
+    await fetch(API_BASE + '/api/videos/' + id, {
+      method: 'DELETE', headers: { 'X-Admin-Password': ADMIN_PWD }
+    });
+    showToast('已删除', 'info');
+    loadVideos();
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+// ===== 系统设置 =====
+async function changePassword() {
+  const old = document.getElementById('oldPwd').value;
+  const newPwd = document.getElementById('newPwd').value;
+  const confirm = document.getElementById('confirmPwd').value;
+  if (!old || !newPwd) { showToast('请填写完整', 'error'); return; }
+  if (newPwd !== confirm) { showToast('两次密码不一致', 'error'); return; }
+  if (newPwd.length < 4) { showToast('密码至少4位', 'error'); return; }
+  try {
+    const res = await fetch(API_BASE + '/api/settings/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Password': ADMIN_PWD },
+      body: JSON.stringify({ old_password: old, new_password: newPwd })
+    });
+    if (!res.ok) throw new Error('修改失败');
+    ADMIN_PWD = newPwd;
+    showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 密码已修改！', 'success');
+    document.getElementById('oldPwd').value = '';
+    document.getElementById('newPwd').value = '';
+    document.getElementById('confirmPwd').value = '';
+  } catch(e) { showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' + e.message, 'error'); }
+}
+
+
+async function generateDemo() {
+  const div = document.getElementById('demoResult');
+  div.textContent = '生成中...';
+  try {
+    const res = await fetch(API_BASE + '/api/demo/generate', {
+      method: 'POST', headers: { 'X-Admin-Password': ADMIN_PWD }
+    });
+    const data = await res.json();
+    div.innerHTML = '<span style="color:#1f9e5c;">✅ ' + data.message + '</span>';
+    loadState();
+  } catch(e) { div.innerHTML = '<span style="color:#c44545;">❌ ' + e.message + '</span>'; }
+}
+
+async function resetDemo() {
+  if (!confirm('确定清除所有选手和比赛数据？')) return;
+  try {
+    const res = await fetch(API_BASE + '/api/demo/reset', {
+      method: 'POST', headers: { 'X-Admin-Password': ADMIN_PWD }
+    });
+    const data = await res.json();
+    document.getElementById('demoResult').innerHTML = '<span style="color:#1f9e5c;">✅ ' + data.message + '</span>';
+    loadState();
+    loadRegistrations();
+  } catch(e) { showToast('❌ ' + e.message, 'error'); }
+}
+
+
+async function loadSysInfo() {
+  const div = document.getElementById('sysInfo');
+  try {
+    const stateRes = await fetch(API_BASE + '/api/state');
+    const state = await stateRes.json();
+    div.innerHTML = `
+      <p><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> 平台: DSB Tournament (FastAPI + SQLite)</p>
+      <p><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 选手总数: ${state.players.length}</p>
+      <p><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 21V11"/><path d="M6 16h2"/><path d="M16 16h2"/><rect x="2" y="3" width="20" height="14" rx="2"/></svg> 瑞士轮: ${state.current_round}/${state.total_rounds} 轮</p>
+      <p><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> 数据文件: data.db</p>
+      <p><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> 访问 <a href="/admin" style="color:#4a9eff;">/admin</a> 进入仪表盘</p>
+    `;
+  } catch(e) {
+    div.innerHTML = '<p style="color:#c44545;">加载失败</p>';
+  }
+}
+
+// 退出
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  ADMIN_PWD = '';
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('dashboardMain').classList.remove('active');
+  document.getElementById('logoutBtn').style.display = 'none';
+  document.getElementById('pwdInput').value = '';
+  document.getElementById('pwdInput').focus();
+});
+</script>
+</body>
+</html>

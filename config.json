@@ -1,0 +1,12 @@
+{
+  "admin_password": "dsb2026",
+  "total_rounds": 5,
+  "max_players": 24,
+  "default_language": "zh",
+  "use_default_seeds": false,
+  "seed_players": [],
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8000
+  }
+}

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星际争霸2 DSB月赛杯 赛事章程</title>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --container-bg: #1f2833;
+            --text-main: #c5c6c7;
+            --text-title: #ffffff;
+            --accent-blue: #66fcf1;
+            --accent-blue-dim: #45a29e;
+            --accent-gold: #f4d03f;
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            --panel: #131a25;
+            --border: #2a3340;
+            --accent: #4a9eff;
+            --muted: #7c8798;
+            --shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.7;
+            margin: 0;
+            padding: 0;
+            /* 页面整体背景稍作调整，配合头图渐变 */
+            background-image: linear-gradient(to bottom, #0b0c10 0%, #111418 100%);
+            background-attachment: fixed;
+        }
+
+        
+        
+        
+        
+
+        
+
+        /* 题头图片区域 (Hero Banner) */
+        .hero-banner {
+            position: relative;
+            width: 100%;
+            height: 400px; /* 头图高度，可自行调整 */
+            /* 下面这行是头图的背景色和占位图，请将 url 里的内容替换为你的真实图片路径 */
+            background: #1a2530 url('image/hero-banner.png') no-repeat center center;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(102, 252, 241, 0.1);
+        }
+
+        /* 渐变遮罩：实现图片向背景色的自然延伸 */
+        .hero-banner::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 180px; /* 渐变区域的高度 */
+            background: linear-gradient(to bottom, rgba(11, 12, 16, 0) 0%, var(--bg-color) 100%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2; /* 确保文字在渐变层之上 */
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .hero-content h1 {
+            color: var(--accent-blue);
+            font-size: 3em;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.8), 0 0 20px rgba(102, 252, 241, 0.4);
+            margin: 0 0 15px 0;
+            letter-spacing: 3px;
+        }
+
+        .hero-content p {
+            color: var(--accent-gold);
+            font-size: 1.4em;
+            margin: 0;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: -40px auto 40px; /* 负的 top margin 让内容稍微向上嵌入渐变区域 */
+            padding: 0 20px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .section-card {
+            background-color: var(--container-bg);
+            border-radius: 12px;
+            padding: 35px 40px;
+            margin-bottom: 35px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(102, 252, 241, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .section-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8);
+            border-color: rgba(102, 252, 241, 0.25);
+        }
+
+        h2 {
+            color: var(--text-title);
+            font-size: 1.6em;
+            border-left: 6px solid var(--accent-blue);
+            padding-left: 15px;
+            margin-top: 0;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+        }
+
+        h3 {
+            color: var(--accent-gold);
+            font-size: 1.25em;
+            margin-top: 30px;
+            margin-bottom: 12px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+            display: inline-block;
+        }
+
+        p, li {
+            font-size: 1.05em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        th, td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        th {
+            background-color: rgba(69, 162, 158, 0.15);
+            color: var(--accent-blue);
+            font-weight: bold;
+            width: 30%; /* 规范表头宽度 */
+        }
+
+        tr:last-child td, tr:last-child th {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+
+        ul, ol {
+            padding-left: 25px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .highlight {
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        /* 地图池网格与图片样式 */
+        .map-pool {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px;
+            list-style: none;
+            padding: 0;
+            margin-top: 25px;
+        }
+
+        .map-card {
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            border: 1px solid rgba(69, 162, 158, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .map-card:hover {
+            border-color: var(--accent-blue);
+            transform: scale(1.03);
+            box-shadow: 0 5px 15px rgba(102, 252, 241, 0.15);
+        }
+
+        .map-image-placeholder {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            background-color: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            font-size: 0.85em;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .map-image-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .map-name {
+            padding: 12px 10px;
+            text-align: center;
+            font-size: 0.95em;
+            font-weight: bold;
+            color: var(--text-title);
+            background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px;
+            font-size: 0.95em;
+            color: #777;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            letter-spacing: 1px;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .hero-banner { height: 180px; }
+            .hero-content h1 { font-size: 1.4em; }
+            .hero-content p { font-size: 1em; }
+            .container { margin-top: -20px; padding: 0 12px; }
+            .section-card { padding: 18px 16px; margin-bottom: 20px; }
+            h2 { font-size: 1.2em; }
+            h3 { font-size: 1.05em; }
+            p, li { font-size: 0.95em; }
+            th, td { padding: 8px; font-size: 0.85em; }
+            table { display: block; overflow-x: auto; }
+            .map-pool { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }            .topbar { padding: 0 8px; height: 48px; }
+            .topbar-brand { font-size: 0.9rem; gap: 6px; }
+            .topbar-brand svg { width: 18px; height: 18px; }
+            .topbar-nav a { padding: 5px 8px; font-size: 0.75rem; }
+        }
+    
+        /* ---------- 顶部导航条 ---------- */
+        .topbar {
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+        }
+        .topbar-brand svg { color: var(--accent); }
+        .topbar-nav { display: flex; gap: 4px; }
+        .topbar-nav a {
+            color: var(--muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .topbar-nav a:hover,
+        .topbar-nav a.active {
+            color: #fff;
+            background: rgba(74,158,255,0.1);
+        }
+        .topbar-nav a.active { color: var(--accent); }
+
+    </style>
+</head>
+<body>
+<nav class="topbar">
+    <a href="/" class="topbar-brand">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M15 4l5 5M4 15l5 5"/></svg>
+        DSB月赛杯
+    </a>
+    <div class="topbar-nav">
+        <a href="/">赛事章程</a>
+        <a href="/saicheng">积分榜</a>
+        <a href="/bracket">淘汰赛</a>
+        <a href="/videos">录像库</a>
+        <a href="/register">报名</a>
+        <a href="/admin" title="管理后台" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:40px;text-decoration:none;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(102,252,241,0.12)'" onmouseout="this.style.background=''"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#66fcf1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>    
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
+        <a href="#" onclick="switchLang('zh')" id="lang_zh" style="font-size:0.75rem;padding:4px 6px;border-radius:4px;text-decoration:none;color:var(--muted);font-weight:600;">中</a>
+        <span style="color:var(--muted);font-size:0.65rem;">|</span>
+        <a href="#" onclick="switchLang('en')" id="lang_en" style="font-size:0.75rem;padding:4px 6px;border-radius:4px;text-decoration:none;color:var(--muted);font-weight:600;">EN</a>
+    </div>
+</nav>
+
+<div class="hero-banner">
+    <div class="hero-content">
+        <h1>星际争霸2 第一届DSB月赛杯</h1>
+        <p>赛事章程 (2026赛季5月)</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="section-card">
+        <h2>一、赛事概况</h2>
+        <table>
+            <tr><th>项目内容</th><td>比赛名称</td></tr>
+            <tr><th>比赛名称</th><td>星际争霸2 DSB月赛杯</td></tr>
+            <tr><th>游戏版本</th><td>《星际争霸2》国服最新版本</td></tr>
+            <tr><th>比赛服务器</th><td>国服</td></tr>
+            <tr><th>比赛模式</th><td>1v1 自定义游戏房间（开启官方观战Mod）</td></tr>
+            <tr><th>参赛人数</th><td>24人</td></tr>
+            <tr><th>总奖池</th><td class="highlight">800元人民币</td></tr>
+        </table>
+    </div>
+
+    <div class="section-card">
+        <h2>二、报名与种子排名</h2>
+        <h3>1. 报名截止</h3>
+        <p><strong>2026年5月20日</strong>截止。<br>报名时选手须如实上报自己的 国服1v1天梯历史最高MMR。</p>
+        
+        <h3>2. 种子排名</h3>
+        <ul>
+            <li>按选手上报的MMR从高到低排出1至24号种子。</li>
+            <li>若MMR相同，按报名先后排序。</li>
+            <li>未提交MMR者视为0分，排在已提交者之后。</li>
+        </ul>
+
+        <h3>3. 公平性声明</h3>
+        <p>选手须诚信上报MMR。若经录像复盘发现实际表现与所报MMR严重不符，组委会有权取消其比赛资格及所获名次奖励。</p>
+    </div>
+
+    <div class="section-card">
+        <h2>三、赛程安排</h2>
+        <table>
+            <tr><th>阶段</th><th>时间</th></tr>
+            <tr><td>报名截止</td><td>2026年5月20日</td></tr>
+            <tr><td>瑞士轮阶段</td><td>5月20日 — 5月27日 14:00</td></tr>
+            <tr><td>八强淘汰赛</td><td>5月30日 — 5月31日</td></tr>
+        </table>
+
+        <h3>瑞士轮详细赛程（每轮间隔一天半）</h3>
+        <table>
+            <tr><th>轮次</th><th>开始时间</th><th>截止时间</th></tr>
+            <tr><td>第1轮</td><td>5月20日 00:00</td><td>5月21日 14:00</td></tr>
+            <tr><td>第2轮</td><td>5月21日 14:00</td><td>5月23日 02:00</td></tr>
+            <tr><td>第3轮</td><td>5月23日 02:00</td><td>5月24日 14:00</td></tr>
+            <tr><td>第4轮</td><td>5月24日 14:00</td><td>5月26日 02:00</td></tr>
+            <tr><td>第5轮</td><td>5月26日 02:00</td><td>5月27日 14:00</td></tr>
+        </table>
+
+        <p>瑞士轮期间，对战双方自行约定比赛时间，但必须 <span class="highlight">在每轮截止时间前完成比赛。</span>所有瑞士轮比赛须在 <span class="highlight">5月27日14:00前完成</span>。<br>
+        八强淘汰赛每场均有官方直播，一场一场进行。</p>
+    </div>
+
+    <div class="section-card">
+        <h2>四、赛制说明</h2>
+        <h3>4.1 总体赛制</h3>
+        <p><strong>第一阶段：5轮瑞士轮</strong></p>
+        <ul>
+            <li>所有选手进行5轮比赛。第1轮纯随机配对。</li>
+            <li>此后每轮按“相同胜场数”的选手之间随机配对，且已交手过的选手不再重复相遇。</li>
+            <li>5轮结束后，按胜场数排名，前8名晋级淘汰赛。</li>
+            <li>若晋级边缘出现同分，依次按以下规则破同分：<br>
+                ① 对手分（所有对手的胜场总和）<br>
+                ② 相互交手战绩<br>
+                ③ 若仍相同，加赛一场Bo1。
+            </li>
+        </ul>
+        <p><strong>第二阶段：8强单败淘汰赛</strong></p>
+        <p>对阵：瑞士轮第1名 vs 第8名，第2名 vs 第7名，第3名 vs 第6名，第4名 vs 第5名。<br>依次进行八进四、半决赛、决赛及季军赛。</p>
+        
+        <h3>4.2 比赛局数</h3>
+        <ul>
+            <li>瑞士轮：<strong>Bo1</strong>（一局定胜负）</li>
+            <li>淘汰赛（八进四、半决赛）：<strong>Bo3</strong>（三局两胜）</li>
+            <li>决赛、季军赛：<strong>Bo3</strong></li>
+        </ul>
+    </div>
+
+    <div class="section-card">
+        <h2>五、地图池与选图规则</h2>
+        <h3>5.1 地图池</h3>
+        <ul class="map-pool">
+            <li class="map-card">
+                <div class="map-image-placeholder">
+                    <img src="image/oldre.png" alt="Old Republic">
+                </div>
+                <div class="map-name">Old Republic</div>
+            </li>
+            <li class="map-card">
+                <div class="map-image-placeholder"><img src="image/10000feet.png" alt="10000 Feet"></div>
+                <div class="map-name">10000 Feet</div>
+            </li>
+            <li class="map-card">
+                <div class="map-image-placeholder"><img src="image/winter.png" alt="Winter's Madness LE"></div>
+                <div class="map-name">Winter's Madness LE</div>
+            </li>
+            <li class="map-card">
+                <div class="map-image-placeholder"><img src="image/taito.png" alt="Taito"></div>
+                <div class="map-name">Taito</div>
+            </li>
+            <li class="map-card">
+                <div class="map-image-placeholder"><img src="image/rubyrock.png" alt="Rubyrock"></div>
+                <div class="map-name">Rubyrock</div>
+            </li>
+            <li class="map-card">
+                <div class="map-image-placeholder"><img src="image/celesital.png" alt="Celestial"></div>
+                <div class="map-name">Celestial</div>
+            </li>
+            <li class="map-card">
+                <div class="map-image-placeholder"><img src="image/oylon.png" alt="Pylon"></div>
+                <div class="map-name">Pylon</div>
+            </li>
+            <li class="map-card">
+                <div class="map-image-placeholder"><img src="image/光影交错.png" alt="光影交错"></div>
+                <div class="map-name">光影交错</div>
+            </li>
+            <li class="map-card">
+                <div class="map-image-placeholder"><img src="image/白兔.png" alt="白兔"></div>
+                <div class="map-name">白兔</div>
+            </li>
+            <li class="map-card">
+                <div class="map-image-placeholder"><img src="image/leylines.png" alt="Ley Lines"></div>
+                <div class="map-name">Ley Lines</div>
+            </li>
+        </ul>
+
+        <h3>5.2 正常选图规则</h3>
+        <p><strong>Bo1 选图：</strong>裁判随机指定先手，按 A-B-B-A 顺序各Ban 2张图（A先Ban 1张 → B Ban 2张 → A Ban 1张），共移除4张。裁判从剩余6张地图中随机抽取1张作为比赛地图。</p>
+        <p><strong>Bo3 选图：</strong>双方各Ban 1张图（A先B后），剩余8张。裁判从8张中随机抽取1张作为第一局地图。第二局由第一局败者从剩余地图中指定一张。若进入第三局，由第二局败者从剩余地图中指定一张。</p>
+
+        <h3>5.3 “让血”机制下的选图权调整</h3>
+        <p>当触发让血机制时，让血方（MMR较高方）自动获得优先Ban图权：</p>
+        <ul>
+            <li><strong>Bo1：</strong>让血方先Ban 1张 → 对手Ban 1张 → 剩余8张中随机抽选。</li>
+            <li><strong>Bo3：</strong>让血方先Ban 1张 → 对手Ban 1张 → 剩余8张中随机抽第一局；之后按败者选图正常进行。</li>
+        </ul>
+    </div>
+
+    <div class="section-card">
+        <h2>六、“让血”机制细则</h2>
+        <ol>
+            <li><strong>触发条件：</strong>对阵双方MMR分差 ≥ 500时触发。</li>
+            <li><strong>血量设置：</strong>建房时，MMR较高方的初始血量百分比设置为：
+                <ul>
+                    <li><span class="highlight">90%</span>（分差500-999）</li>
+                    <li><span class="highlight">80%</span>（分差1000-1499）</li>
+                    <li><span class="highlight">70%</span>（分差1500及以上）</li>
+                    <li>封顶让血30%（即血量最低70%）。</li>
+                </ul>
+            </li>
+            <li><strong>适用范围：</strong>瑞士轮阶段和淘汰赛阶段均执行此规则。</li>
+            <li><strong>掉线重开：</strong>若发生掉线需重开，让血方仍需按原规则重新设置血量。</li>
+            <li><strong>拖农限制：</strong>被让血方（MMR较低方）禁止使用拖农民all-in战术。</li>
+        </ol>
+    </div>
+
+    <div class="section-card">
+        <h2>七、比赛进行规则</h2>
+        <h3>7.1 直播与录像</h3>
+        <p><strong>瑞士轮：</strong>选手可向组委会申请直播解说自己的比赛。不申请直播的场次，由胜方在比赛结束后 <span class="highlight">2小时内</span> 向裁判提交比赛结果及录像文件。</p>
+        <p><strong>淘汰赛：</strong>所有场次由官方统一直播。</p>
+
+        <h3>7.2 弃赛与迟到</h3>
+        <ul>
+            <li><strong>迟到：</strong>超过约定比赛时间 30分钟 且未提前说明者，直接判本轮弃权，对手拿分晋级。</li>
+            <li><strong>无故弃赛：</strong>取消本次比赛资格，并 <strong>禁止参加此后的DSB月度系列赛</strong>。</li>
+            <li><strong>合理离赛：</strong>若因突发事件无法继续比赛，向组委会说明并获认可后，可免于禁赛处罚，但本轮仍判对手拿分晋级。</li>
+        </ul>
+
+        <h3>7.3 掉线规则</h3>
+        <p>每场比赛中，每位选手有 <strong>1次</strong> 因掉线申请重开当前小局的机会。<br>同一场比赛发生 <strong>第2次</strong> 掉线，则该小局判负。<br></p>
+    </div>
+
+    <div class="section-card">
+        <h2>八、奖金分配</h2>
+        <table>
+            <tr><th>名次</th><th>人数</th><th>人均奖金</th><th>小计</th></tr>
+            <tr><td class="highlight">冠军</td><td>1</td><td>150元</td><td>150</td></tr>
+            <tr><td>亚军</td><td>1</td><td>90元</td><td>90</td></tr>
+            <tr><td>季军</td><td>1</td><td>70元</td><td>70</td></tr>
+            <tr><td>殿军</td><td>1</td><td>50元</td><td>50</td></tr>
+            <tr><td>5-8名</td><td>4</td><td>30元</td><td>120</td></tr>
+            <tr><td>9-24名</td><td>16</td><td>20元</td><td>320</td></tr>
+            <tr><th>合计</th><th>24</th><th></th><th class="highlight">800</th></tr>
+        </table>
+    </div>
+
+    <div class="section-card">
+        <h2>九、其他</h2>
+        <p>比赛中严禁使用任何第三方作弊软件或利用游戏恶性Bug，一经发现，永久取消DSB系列赛事参赛资格。</p>
+        <p>赛事期间，若有规则未详尽之处，由组委会商议后做出最终裁定。</p>
+        <p style="text-align: right; color: var(--accent-blue-dim); margin-top: 30px; font-size: 0.9em;">*本章程最终解释权归DSB月赛杯组委会所有。</p>
+    </div>
+
+    <div class="footer">
+        <p>GL HF | DSB Tournament &copy; 2026 联系群聊:701237203</p>
+    </div>
+</div>
+
+<script>
+// 从仪表盘加载动态内容
+(async function(){
+  try {
+    const res = await fetch('/api/dashboard/content');
+    const c = await res.json();
+    
+    // 替换 h1 标题
+    const h1 = document.querySelector('h1');
+    if (h1 && c.site_title) h1.textContent = c.site_title;
+    
+    // 替换副标题
+    const sub = document.querySelector('.hero-content p');
+    if (sub && c.site_subtitle) sub.textContent = c.site_subtitle;
+    
+    // 替换比赛名称 (表格中的)
+    const tds = document.querySelectorAll('td');
+    tds.forEach(td => {
+      if (td.textContent === '星际争霸2 DSB月赛杯' && c.tournament_name) {
+        td.textContent = c.tournament_name;
+      }
+    });
+    
+    // 替换奖池
+    const highlights = document.querySelectorAll('.highlight');
+    highlights.forEach(h => {
+      if (h.textContent.includes('800元') && c.prize_pool) {
+        h.textContent = c.prize_pool;
+      }
+    });
+    
+    // 替换页脚
+    const footer = document.querySelector('.footer p');
+    if (footer && c.contact_info) footer.innerHTML = c.contact_info;
+    
+    // 替换 banner 背景
+    if (c.hero_banner_bg) {
+      const banner = document.querySelector('.hero-banner');
+      if (banner) {
+        banner.style.backgroundImage = "url('" + c.hero_banner_bg + "')";
+      }
+    }
+    
+    // 应用颜色主题
+    const root = document.documentElement;
+    const colorMap = {
+      'theme_bg': '--bg-color',
+      'theme_container': '--container-bg',
+      'theme_text': '--text-main',
+      'theme_title': '--text-title',
+      'theme_accent': '--accent-blue',
+      'theme_accent_dim': '--accent-blue-dim',
+      'theme_gold': '--accent-gold',
+    };
+    for (const [key, cssVar] of Object.entries(colorMap)) {
+      if (c[key]) {
+        root.style.setProperty(cssVar, c[key]);
+      }
+    }
+    
+  } catch(e) {
+    console.log('DSB: 仪表盘内容加载跳过', e);
+  }
+})();
+</script>
+
+<script>
+// 语言切换
+async function switchLang(lang) {
+  try {
+    const res = await fetch('/api/lang/' + lang);
+    const t = await res.json();
+    // 保存到 localStorage
+    localStorage.setItem('dsb_lang', lang);
+    // 高亮当前语言
+    document.getElementById('lang_zh').style.color = lang === 'zh' ? 'var(--accent-blue)' : 'var(--muted)';
+    document.getElementById('lang_en').style.color = lang === 'en' ? 'var(--accent-blue)' : 'var(--muted)';
+    // 替换导航文字
+    const navMap = {
+      'nav_home': 'nav_home', 'nav_standings': 'nav_standings', 
+      'nav_bracket': 'nav_bracket', 'nav_videos': 'nav_videos',
+      'nav_register': 'nav_register'
+    };
+    const navLinks = document.querySelectorAll('.topbar-nav a');
+    const keys = ['nav_home', 'nav_standings', 'nav_bracket', 'nav_videos', 'nav_register'];
+    navLinks.forEach((a, i) => {
+      if (i < keys.length && t[keys[i]]) a.textContent = t[keys[i]];
+    });
+  } catch(e) { console.log('lang switch error', e); }
+}
+
+// 初始化语言
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('dsb_lang') || 'zh';
+  switchLang(saved);
+});
+</script>
+</body>
+</html>

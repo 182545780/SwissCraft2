@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSB月赛杯 · 八强淘汰赛</title>
+    <style>
+        :root {
+            --bg: #0a0e17;
+            --panel: #131a25;
+            --border: #2a3340;
+            --text: #d0d5dd;
+            --accent: #4a9eff;
+            --win: #1f9e5c;
+            --lose: #c44545;
+            --gold: #f0b90b;
+            --muted: #7c8798;
+            --radius: 8px;
+            --shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI','Inter',system-ui,-apple-system,sans-serif; }
+        body { background:var(--bg); color:var(--text); min-height:100vh; }
+
+        .topbar {
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+        }
+        .topbar-brand svg { color: var(--accent); }
+        .topbar-nav { display: flex; gap: 4px; }
+        .topbar-nav a {
+            color: var(--muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .topbar-nav a:hover,
+        .topbar-nav a.active {
+            color: #fff;
+            background: rgba(74,158,255,0.1);
+        }
+        .topbar-nav a.active { color: var(--accent); }
+
+        .page-title {
+            text-align: center;
+            padding: 32px 16px 16px;
+            color: #fff;
+        }
+        .page-title h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: 1px; }
+        .page-title p { color: var(--muted); font-size: 0.95rem; margin-top: 6px; }
+
+        /* ===== 淘汰赛树 ===== */
+        .bracket-wrap {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px 40px;
+            overflow-x: auto;
+        }
+
+        .bracket-tree {
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            gap: 8px;
+            min-width: 1100px;
+            padding: 20px 0;
+        }
+
+        .round-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            gap: 24px;
+            flex: 1;
+            max-width: 260px;
+            position: relative;
+        }
+
+        .round-col .round-label {
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            padding: 8px 0;
+            border-bottom: 2px solid var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .match-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+            position: relative;
+        }
+        .match-card:hover { border-color: rgba(74,158,255,0.3); }
+        .match-card.completed { border-color: rgba(31,158,92,0.3); background: #0f1a15; }
+        .match-card .match-label {
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .bracket-player {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin: 2px 0;
+            transition: 0.2s;
+        }
+        .bracket-player .name { font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; }
+        .bracket-player .score { font-weight: 700; font-size: 1rem; min-width: 24px; text-align: center; }
+        .bracket-player.winner { background: rgba(31,158,92,0.15); color: var(--win); }
+        .bracket-player.loser { color: var(--muted); opacity: 0.6; }
+
+        .race-z { color: #c084fc; }
+        .race-p { color: #facc15; }
+        .race-t { color: #60a5fa; }
+
+        .vs-divider { text-align: center; color: var(--muted); font-size: 0.75rem; padding: 2px 0; }
+        .match-card.empty { opacity: 0.4; }
+
+        .match-card .admin-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .match-card .admin-actions button {
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            border-radius: 3px;
+            border: 1px solid var(--border);
+            background: #1e2b3f;
+            color: var(--text);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .match-card .admin-actions button:hover { border-color: var(--accent); }
+
+        .controls-bar {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px 0 24px;
+            flex-wrap: wrap;
+        }
+        .controls-bar button {
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid var(--gold);
+            background: transparent;
+            color: var(--gold);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .controls-bar button:hover { background: #2a2a10; box-shadow: 0 0 10px rgba(240,185,11,0.3); }
+        .controls-bar button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .controls-bar button.primary:hover { box-shadow: 0 0 12px rgba(74,158,255,0.4); }
+        .controls-bar button.danger { border-color: var(--lose); color: var(--lose); }
+        .controls-bar button.danger:hover { background: #3a1e1e; }
+
+        .footer { text-align: center; padding: 24px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+
+        @media (max-width: 768px) {
+            .topbar { padding: 0 12px; }
+            .topbar-brand { font-size: 0.9rem; }
+            .topbar-nav a { padding: 6px 10px; font-size: 0.8rem; }
+            .bracket-tree { min-width: 900px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topbar">
+    <a href="/" class="topbar-brand">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M15 4l5 5M4 15l5 5"/></svg>
+        DSB月赛杯
+    </a>
+    <div class="topbar-nav">
+        <a href="/">赛事章程</a>
+        <a href="/saicheng">积分榜</a>
+        <a href="/bracket" class="active">淘汰赛</a>
+        <a href="/videos">录像库</a>
+        <a href="/register">报名</a>
+        <a href="/admin" title="管理后台" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:40px;text-decoration:none;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(102,252,241,0.12)'" onmouseout="this.style.background=''"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#66fcf1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>    
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
+        <a href="#" onclick="switchLang('zh')" id="lang_zh" style="font-size:0.75rem;padding:4px 6px;border-radius:4px;text-decoration:none;color:var(--muted);font-weight:600;">中</a>
+        <span style="color:var(--muted);font-size:0.65rem;">|</span>
+        <a href="#" onclick="switchLang('en')" id="lang_en" style="font-size:0.75rem;padding:4px 6px;border-radius:4px;text-decoration:none;color:var(--muted);font-weight:600;">EN</a>
+    </div>
+</nav>
+
+<div class="page-title">
+    <h1>DSB月赛杯 八强淘汰赛</h1>
+    <p>单败淘汰制 · 八进四 Bo1 · 半决赛/决赛/季军赛 Bo3</p>
+</div>
+
+<div class="controls-bar" id="controlsBar">
+    <button class="primary" onclick="generateBracket()">生成对阵</button>
+    <button class="danger" onclick="resetBracket()">重置</button>
+    <button onclick="toggleAdmin()" id="adminToggle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> 管理员</button>
+</div>
+
+<div class="bracket-wrap">
+    <div class="bracket-tree" id="bracketTree">
+        <div class="round-col" id="col-qf">
+            <div class="round-label">四分之一决赛</div>
+        </div>
+        <div class="round-col" id="col-sf">
+            <div class="round-label">半决赛</div>
+        </div>
+        <div class="round-col" id="col-final">
+            <div class="round-label">决赛</div>
+        </div>
+        <div class="round-col" id="col-third">
+            <div class="round-label">季军赛</div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">GL HF | DSB Tournament &copy; 2026</div>
+
+<script>
+let isAdmin = false;
+let adminPassword = localStorage.getItem('dsb_admin_pwd') || '';
+
+function raceClass(race) {
+    if (race === 'z') return 'race-z';
+    if (race === 'p') return 'race-p';
+    if (race === 't') return 'race-t';
+    return '';
+}
+
+async function fetchAPI(url, opts = {}) {
+    if (adminPassword) {
+        opts.headers = { ...(opts.headers || {}), 'X-Admin-Password': adminPassword };
+    }
+    const res = await fetch(url, opts);
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error(err.detail || '请求失败');
+    }
+    return res.json();
+}
+
+function renderBracket(data) {
+    const matches = data.matches || [];
+    
+    const qfCol = document.getElementById('col-qf');
+    const sfCol = document.getElementById('col-sf');
+    const finalCol = document.getElementById('col-final');
+    const thirdCol = document.getElementById('col-third');
+    
+    qfCol.innerHTML = '<div class="round-label">\u56db\u5206\u4e4b\u4e00\u51b3\u8d5b</div>';
+    sfCol.innerHTML = '<div class="round-label">\u534a\u51b3\u8d5b</div>';
+    finalCol.innerHTML = '<div class="round-label">\u51b3\u8d5b</div>';
+    thirdCol.innerHTML = '<div class="round-label">\u5b63\u519b\u8d5b</div>';
+    
+    const qfMatches = matches.filter(m => m.round === 'quarterfinal');
+    const sfMatches = matches.filter(m => m.round === 'semifinal');
+    const finalMatch = matches.find(m => m.round === 'final');
+    const thirdMatch = matches.find(m => m.round === 'third_place');
+    
+    // 四分之一决赛
+    const qfOrder = ['qf1', 'qf2', 'qf3', 'qf4'];
+    qfOrder.forEach(slot => {
+        const m = qfMatches.find(x => x.slot === slot);
+        qfCol.appendChild(createMatchCard(m, slot));
+    });
+    
+    // 半决赛
+    const sfOrder = ['sf1', 'sf2'];
+    sfOrder.forEach(slot => {
+        const m = sfMatches.find(x => x.slot === slot);
+        sfCol.appendChild(createMatchCard(m, slot));
+    });
+    
+    // 决赛
+    finalCol.appendChild(createMatchCard(finalMatch, 'final'));
+    
+    // 季军赛
+    thirdCol.appendChild(createMatchCard(thirdMatch, 'third'));
+}
+
+function createMatchCard(match, slot) {
+    const card = document.createElement('div');
+    card.className = 'match-card';
+    
+    const labels = { 'qf1': 'A组', 'qf2': 'B组', 'qf3': 'C组', 'qf4': 'D组',
+                     'sf1': '上半区', 'sf2': '下半区', 'final': '冠军战', 'third': '季军战' };
+    
+    if (!match || (!match.player1_id && !match.player2_id)) {
+        card.classList.add('empty');
+        card.innerHTML = `<div class="match-label">${labels[slot] || slot}</div><div style="text-align:center;color:var(--muted);padding:12px;font-size:0.85rem;">等待对阵</div>`;
+        return card;
+    }
+    
+    const isCompleted = match.winner_id !== null;
+    if (isCompleted) card.classList.add('completed');
+    
+    const p1Winner = match.winner_id === match.player1_id;
+    const p2Winner = match.winner_id === match.player2_id;
+    
+    let html = `<div class="match-label">${labels[slot] || slot}</div>`;
+    
+    // Player 1
+    html += `<div class="bracket-player ${p1Winner ? 'winner' : (isCompleted ? 'loser' : '')}">`;
+    html += `<span class="name"><span class="${raceClass(match.player1_race)}">${match.player1_race ? match.player1_race.toUpperCase() : ''}</span> ${match.player1_name || 'TBD'}</span>`;
+    html += `<span class="score">${isCompleted ? (p1Winner ? 'W' : match.score1 || 0) : '-'}</span>`;
+    html += `</div>`;
+    
+    // VS divider
+    html += `<div class="vs-divider">${isCompleted ? '' : 'VS'}</div>`;
+    
+    // Player 2
+    html += `<div class="bracket-player ${p2Winner ? 'winner' : (isCompleted ? 'loser' : '')}">`;
+    html += `<span class="name"><span class="${raceClass(match.player2_race)}">${match.player2_race ? match.player2_race.toUpperCase() : ''}</span> ${match.player2_name || 'TBD'}</span>`;
+    html += `<span class="score">${isCompleted ? (p2Winner ? 'W' : match.score2 || 0) : '-'}</span>`;
+    html += `</div>`;
+    
+    // 管理员操作
+    if (isAdmin && !isCompleted && match.player1_id && match.player2_id) {
+        html += `<div class="admin-actions">`;
+        html += `<button onclick="recordResult('${slot}', ${match.player1_id}, 2, 0)">${match.player1_name} 胜</button>`;
+        html += `<button onclick="recordResult('${slot}', ${match.player2_id}, 0, 2)">${match.player2_name} 胜</button>`;
+        html += `</div>`;
+    }
+    
+    if (isCompleted && isAdmin) {
+        html += `<div class="admin-actions"><span style="font-size:0.75rem;color:var(--win);">${match.winner_name} 晋级</span></div>`;
+    }
+    
+    card.innerHTML = html;
+    return card;
+}
+
+async function loadBracket() {
+    try {
+        const data = await fetchAPI('/api/bracket');
+        renderBracket(data);
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function generateBracket() {
+    try {
+        const data = await fetchAPI('/api/bracket/generate', { method: 'POST' });
+        renderBracket(data);
+    } catch (e) {
+        alert('生成失败: ' + e.message);
+    }
+}
+
+async function resetBracket() {
+    if (!confirm('确定重置所有淘汰赛数据？')) return;
+    try {
+        await fetchAPI('/api/bracket/reset', { method: 'POST' });
+        loadBracket();
+    } catch (e) {
+        alert('重置失败: ' + e.message);
+    }
+}
+
+async function recordResult(slot, winnerId, score1, score2) {
+    try {
+        const data = await fetchAPI(`/api/bracket/result/${slot}?winner_id=${winnerId}&score1=${score1}&score2=${score2}`, { method: 'POST' });
+        renderBracket(data);
+    } catch (e) {
+        alert('记录失败: ' + e.message);
+    }
+}
+
+function toggleAdmin() {
+    if (!isAdmin) {
+        const pwd = prompt('请输入管理员密码:');
+        if (pwd) {
+            adminPassword = pwd;
+            localStorage.setItem('dsb_admin_pwd', pwd);
+            isAdmin = true;
+            document.getElementById('adminToggle').textContent = '\uD83D\uDD13 管理员';
+            loadBracket();
+        }
+    } else {
+        isAdmin = false;
+        adminPassword = '';
+        localStorage.removeItem('dsb_admin_pwd');
+        document.getElementById('adminToggle').textContent = '\uD83D\uDD12 管理员';
+        loadBracket();
+    }
+}
+
+if (localStorage.getItem('dsb_admin_pwd')) {
+    adminPassword = localStorage.getItem('dsb_admin_pwd');
+    isAdmin = true;
+    document.getElementById('adminToggle').textContent = '\uD83D\uDD13 管理员';
+}
+
+loadBracket();
+</script>
+</body>
+</html>

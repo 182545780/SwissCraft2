@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSB月赛杯 · 瑞士轮积分系统</title>
+    <style>
+        :root {
+            --bg: #0a0e17;
+            --panel: #131a25;
+            --border: #2a3340;
+            --text: #d0d5dd;
+            --accent: #4a9eff;
+            --win: #1f9e5c;
+            --lose: #c44545;
+            --gold: #f0b90b;
+            --muted: #7c8798;
+            --radius: 8px;
+            --shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI','Inter',system-ui,-apple-system,sans-serif; }
+        body { background:var(--bg); color:var(--text); min-height:100vh; }
+
+        /* ---------- 顶部导航条 ---------- */
+        .topbar {
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .topbar-brand {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+        }
+        .topbar-nav { display: flex; gap: 4px; }
+        .topbar-nav a {
+            color: var(--muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .topbar-nav a:hover,
+        .topbar-nav a.active {
+            color: #fff;
+            background: rgba(74,158,255,0.1);
+        }
+        .topbar-nav a.active { color: var(--accent); }
+
+        .container { max-width:1300px; width:100%; margin:0 auto; display:flex; flex-direction:column; gap:20px; padding:0 16px; }
+        .header { background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:20px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; box-shadow:var(--shadow); }
+        .title-section h1 { font-size:1.7rem; font-weight:700; letter-spacing:0.5px; color:#fff; display:flex; align-items:center; gap:10px; }
+        .title-section h1 .icon { font-size:1.8rem; color:var(--accent); }
+        .subtitle { color:var(--muted); font-size:0.9rem; margin-top:4px; }
+        .round-badge { background:#1e2b3f; padding:8px 18px; border-radius:30px; font-weight:600; font-size:1.1rem; display:flex; align-items:center; gap:8px; border:1px solid var(--accent); color:var(--accent); white-space:nowrap; }
+        .controls { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+        .controls-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 16px 0;
+        }
+
+        button { background:#1e2b3f; border:1px solid var(--border); color:var(--text); padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer; transition:all 0.2s; font-size:0.95rem; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+        button:hover { background:#2a3a52; border-color:var(--accent); color:#fff; }
+        button.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700; }
+        button.primary:hover { background:#3a8cee; box-shadow:0 0 12px rgba(74,158,255,0.4); }
+        button.danger { border-color:#c44545; color:#c44545; }
+        button.danger:hover { background:#3a1e1e; border-color:#e05a5a; color:#e05a5a; }
+        button:disabled { opacity:0.45; cursor:not-allowed; pointer-events:none; }
+        button.locked { opacity:0.35; cursor:not-allowed; pointer-events:none; }
+        .lock-btn { background:transparent; border:1px solid var(--gold); color:var(--gold); padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer; transition:all 0.2s; font-size:0.95rem; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+        .lock-btn.unlocked { border-color:var(--win); color:var(--win); }
+        .lock-btn:hover { background:#2a2a10; border-color:#f5c518; color:#f5c518; }
+        .lock-btn.unlocked:hover { background:#0f1a15; border-color:#2ecc71; color:#2ecc71; }
+        .nav-link { background:transparent; border:1px solid var(--gold); color:var(--gold); padding:10px 20px; border-radius:6px; font-weight:600; text-decoration:none; transition:all 0.2s; font-size:0.95rem; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+        .nav-link:hover { background:#2a2a10; border-color:#f5c518; color:#f5c518; box-shadow:0 0 10px rgba(240,185,11,0.3); }
+        .card { background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
+        .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; font-weight:600; font-size:1.1rem; color:#fff; border-bottom:1px solid var(--border); padding-bottom:12px; }
+        table { width:100%; border-collapse:collapse; font-size:0.9rem; }
+        th { text-align:left; color:var(--muted); font-weight:600; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px 8px; background:#0f1620; border-bottom:1px solid var(--border); }
+        td { padding:10px 8px; border-bottom:1px solid #1f2937; vertical-align:middle; }
+        .player-row { transition:background 0.15s; }
+        .player-row:hover { background:#1b2330; }
+        .rank { font-weight:700; font-size:1.1rem; color:#fff; width:40px; }
+        .mmr { color:var(--muted); font-size:0.85rem; }
+        .score-cell { font-weight:700; font-size:1rem; }
+        .win-text { color:var(--win); }
+        .lose-text { color:var(--lose); }
+        .pairings-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; margin-top:8px; }
+        .pairing-card { background:#1b2330; border-radius:var(--radius); padding:14px; border:1px solid #2a3340; display:flex; flex-direction:column; gap:12px; transition:all 0.2s; }
+        .pairing-card.finished { border-color:#1f9e5c40; background:#0f1a15; }
+        .player-slot { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+        .player-name { font-weight:600; display:flex; align-items:center; gap:6px; }
+        .player-name .seed { color:var(--muted); font-weight:400; font-size:0.8rem; }
+        .result-btn-group { display:flex; gap:8px; justify-content:center; }
+        .result-btn { padding:6px 14px; border-radius:4px; font-weight:600; font-size:0.8rem; cursor:pointer; background:#2a3340; border:1px solid #3a4455; color:#ccc; transition:0.2s; }
+        .result-btn.win-btn:hover { background:#1f9e5c; border-color:#1f9e5c; color:white; }
+        .result-btn.lose-btn:hover { background:#c44545; border-color:#c44545; color:white; }
+        .result-indicator { font-weight:700; font-size:0.9rem; padding:4px 10px; border-radius:4px; background:#2a3340; }
+        .winner-highlight { color:#1f9e5c; background:#1f9e5c15; border-radius:4px; padding:2px 8px; }
+        .vs-text { text-align:center; color:var(--muted); font-weight:700; font-size:0.9rem; letter-spacing:1px; }
+        .message { text-align:center; color:var(--muted); padding:20px; font-style:italic; }
+        .race-z { color:#c084fc; font-weight:700; } /* 虫族紫 */
+        .race-p { color:#facc15; font-weight:700; } /* 神族金 */
+        .race-t { color:#60a5fa; font-weight:700; } /* 人族蓝 */
+        .race-tag { display:inline-block; padding:1px 6px; border-radius:3px; font-size:0.75rem; font-weight:700; margin-left:4px; }
+        .race-tag.z { background:#7c3aed20; color:#c084fc; border:1px solid #7c3aed40; }
+        .race-tag.p { background:#eab30820; color:#facc15; border:1px solid #eab30840; }
+        .race-tag.t { background:#2563eb20; color:#60a5fa; border:1px solid #2563eb40; }
+        .race-icon { width:18px; height:18px; vertical-align:middle; margin-right:4px; }
+        .race-tag .race-icon { width:14px; height:14px; margin-right:0; }
+        .error-msg { text-align:center; color:#c44545; padding:20px; }
+        .loading { text-align:center; color:var(--accent); padding:20px; }
+        @media (max-width: 768px) {
+            .header { flex-direction:column; align-items:flex-start; }
+            .title-section h1 { font-size: 1.2rem; }
+            .round-badge { font-size: 0.9rem; padding: 6px 12px; }
+            button { padding: 8px 14px; font-size: 0.8rem; }
+            .pairings-grid { grid-template-columns:1fr; }
+            .controls-bar { flex-direction:column; gap: 8px; }
+            .card { padding: 14px; }
+            table { display: block; overflow-x: auto; font-size: 0.8rem; }
+            th, td { padding: 6px 5px; }
+            .race-icon { width: 14px; height: 14px; }            .topbar { padding: 0 8px; height: 48px; }
+            .topbar-brand { font-size: 0.9rem; gap: 6px; }
+        .topbar-brand svg { color: var(--accent); width: 18px; height: 18px; }
+            .topbar-nav a { padding: 5px 8px; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+<nav class="topbar">
+    <a href="/" class="topbar-brand"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M15 4l5 5M4 15l5 5"/></svg>DSB月赛杯</a>
+    <div class="topbar-nav">
+        <a href="/">赛事章程</a>
+        <a href="/saicheng" class="active">积分榜</a>
+        <a href="/bracket">淘汰赛</a>
+        <a href="/videos">录像库</a>
+        <a href="/register">报名</a>
+        <a href="/admin" title="管理后台" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:40px;text-decoration:none;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(102,252,241,0.12)'" onmouseout="this.style.background=''"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#66fcf1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>    
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
+        <a href="#" onclick="switchLang('zh')" id="lang_zh" style="font-size:0.75rem;padding:4px 6px;border-radius:4px;text-decoration:none;color:var(--muted);font-weight:600;">中</a>
+        <span style="color:var(--muted);font-size:0.65rem;">|</span>
+        <a href="#" onclick="switchLang('en')" id="lang_en" style="font-size:0.75rem;padding:4px 6px;border-radius:4px;text-decoration:none;color:var(--muted);font-weight:600;">EN</a>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- 头部 -->
+    <div class="header">
+        <div class="title-section">
+            <h1>星际争霸2 · DSB月赛杯</h1>
+            <div class="subtitle">瑞士轮积分系统 | 24人 · 5轮 · 8强晋级淘汰赛</div>
+        </div>
+    </div>
+
+    <!-- 双列布局：左侧积分榜，右侧当前配对 -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start;">
+        <div class="card" style="grid-column:1;">
+            <div class="card-header">
+                <span>实时积分排名</span>
+                <span style="font-size:0.8rem; color:var(--muted);">按胜场→对手分→MMR</span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table id="standingsTable">
+                    <thead>
+                    <tr><th>#</th><th>选手</th><th>种族</th><th>MMR</th><th>胜场</th><th>对手分</th><th>胜局</th></tr>
+                    </thead>
+                    <tbody id="standingsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card" style="grid-column:2;">
+            <div class="card-header">
+                <span>当前配对</span>
+                <span id="pairingStatus" style="font-size:0.85rem; color:var(--accent);">加载中...</span>
+            </div>
+            <div id="pairingsContainer" class="pairings-grid">
+                <div class="loading">连接服务器中...</div>
+            </div>
+            <div style="margin-top:14px; font-size:0.8rem; color:var(--muted); text-align:center;">
+                点击胜负按钮记录结果，自动计算积分。数据持久化到服务器。
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作控制栏 -->
+    <div class="controls-bar">
+        <button id="lockBtn" class="lock-btn" onclick="toggleLock()">点击解锁</button>
+        <div class="round-badge" id="roundDisplay">加载中...</div>
+        <button id="nextRoundBtn" class="primary locked" onclick="nextRound()" disabled>生成下一轮配对</button>
+        <button id="resetBtn" class="danger locked" onclick="resetAll()" disabled>重置全部</button>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- API 配置 ----------
+        const API_BASE = '';  // 空字符串表示同源，部署时如需跨域改为完整URL
+
+        // ---------- 本地缓存 ----------
+        let state = null;        // 完整的 API 返回状态
+        let adminToken = sessionStorage.getItem('dsb_admin_token') || null;
+
+        // ---------- 鉴权 ----------
+        function isUnlocked() { return !!adminToken; }
+
+        async function toggleLock() {
+            if (isUnlocked()) {
+                // 锁定
+                adminToken = null;
+                sessionStorage.removeItem('dsb_admin_token');
+                updateLockUI();
+                renderAll();
+                return;
+            }
+            // 解锁
+            const pw = prompt('请输入管理员密码：');
+            if (!pw) return;
+            try {
+                const resp = await fetch(API_BASE + '/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+                if (!resp.ok) { alert('密码错误'); return; }
+                const data = await resp.json();
+                adminToken = data.token;
+                sessionStorage.setItem('dsb_admin_token', adminToken);
+                updateLockUI();
+                renderAll();
+            } catch (e) {
+                alert('验证失败: ' + e.message);
+            }
+        }
+
+        function updateLockUI() {
+            const btn = document.getElementById('lockBtn');
+            if (isUnlocked()) {
+                btn.className = 'lock-btn unlocked';
+                btn.textContent = '已解锁 (点击锁定)';
+            } else {
+                btn.className = 'lock-btn';
+                btn.textContent = '点击解锁';
+            }
+        }
+
+        // ---------- API 调用 ----------
+        async function apiFetch(path, options = {}) {
+            const url = API_BASE + path;
+            const headers = { 'Content-Type': 'application/json' };
+            if (adminToken && options.method === 'POST') {
+                headers['X-Admin-Password'] = adminToken;
+            }
+            const res = await fetch(url, { headers, ...options });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({ detail: res.statusText }));
+                throw new Error(err.detail || `HTTP ${res.status}`);
+            }
+            return res.json();
+        }
+
+        async function fetchState() {
+            state = await apiFetch('/api/state');
+            renderAll();
+        }
+
+        async function nextRound() {
+            try {
+                state = await apiFetch('/api/next-round', { method: 'POST' });
+                renderAll();
+            } catch (e) {
+                alert('操作失败: ' + e.message);
+            }
+        }
+
+        async function recordResult(matchId, winnerId) {
+            try {
+                state = await apiFetch(`/api/record-result/${matchId}?winner_id=${winnerId}`, { method: 'POST' });
+                renderAll();
+            } catch (e) {
+                alert('操作失败: ' + e.message);
+            }
+        }
+
+        async function undoResult(matchId) {
+            try {
+                state = await apiFetch(`/api/undo-result/${matchId}`, { method: 'POST' });
+                renderAll();
+            } catch (e) {
+                alert('操作失败: ' + e.message);
+            }
+        }
+
+        async function resetAll() {
+            if (!confirm('确定要重置所有比赛数据吗？此操作不可恢复！')) return;
+            try {
+                state = await apiFetch('/api/reset', { method: 'POST' });
+                renderAll();
+            } catch (e) {
+                alert('操作失败: ' + e.message);
+            }
+        }
+
+        // ---------- 渲染 ----------
+        function renderAll() {
+            if (!state) return;
+            renderRoundBadge();
+            renderStandings();
+            renderPairings();
+            renderButtons();
+        }
+
+        function renderRoundBadge() {
+            const el = document.getElementById('roundDisplay');
+            if (state.current_round === 0) {
+                el.innerHTML = '等待开始';
+            } else if (state.finished) {
+                el.innerHTML = `瑞士轮结束 (${state.total_rounds}轮)`;
+            } else {
+                el.innerHTML = ` 第 ${state.current_round} / ${state.total_rounds} 轮`;
+            }
+        }
+
+        function renderStandings() {
+            const tbody = document.getElementById('standingsBody');
+            if (!state.standings || state.standings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="message">暂无数据</td></tr>';
+                return;
+            }
+            const raceInfo = {
+                z: { icon: '/image/zerg.svg', name: '虫族' },
+                p: { icon: '/image/protoss.svg', name: '神族' },
+                t: { icon: '/image/terran.svg', name: '人族' },
+            };
+            tbody.innerHTML = state.standings.map((p) => {
+                let rankStyle = p.rank <= 8 ? 'style="color:var(--accent);font-weight:700;"' : '';
+                const race = (p.race || '').toLowerCase();
+                const info = raceInfo[race];
+                const raceHtml = info
+                    ? `<img src="${info.icon}" class="race-icon" alt="${info.name}"><span class="race-${race}">${info.name}</span>`
+                    : race.toUpperCase();
+                return `
+                <tr class="player-row">
+                    <td class="rank" ${rankStyle}>${p.rank}</td>
+                    <td><span class="player-name">${escHtml(p.name)} <span class="seed">#${p.id}</span></span></td>
+                    <td>${raceHtml}</td>
+                    <td class="mmr">${p.mmr}</td>
+                    <td class="score-cell win-text">${p.wins}</td>
+                    <td>${p.opponent_score}</td>
+                    <td>${p.games_won}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderPairings() {
+            const container = document.getElementById('pairingsContainer');
+            const statusEl = document.getElementById('pairingStatus');
+
+            if (!state || state.current_round === 0) {
+                container.innerHTML = '<div class="message">点击"生成下一轮配对"开始第1轮</div>';
+                statusEl.textContent = '未开始';
+                statusEl.style.color = 'var(--muted)';
+                return;
+            }
+
+            if (state.finished) {
+                container.innerHTML = '<div class="message">瑞士轮结束，请查看积分榜前8名晋级</div>';
+                statusEl.textContent = '已完成';
+                statusEl.style.color = 'var(--win)';
+                return;
+            }
+
+            if (!state.pairings || state.pairings.length === 0) {
+                container.innerHTML = '<div class="message">瑞士轮结束，请查看积分榜前8名晋级</div>';
+                statusEl.textContent = '已完成';
+                statusEl.style.color = 'var(--win)';
+                return;
+            }
+
+            // 更新状态
+            if (state.round_complete) {
+                statusEl.textContent = '本轮已完成';
+                statusEl.style.color = 'var(--win)';
+            } else {
+                statusEl.textContent = '进行中';
+                statusEl.style.color = 'var(--accent)';
+            }
+
+            // 构建选手 ID -> 名称映射
+            const playerMap = {};
+            if (state.players) {
+                state.players.forEach(p => { playerMap[p.id] = p; });
+            }
+
+            const locked = !isUnlocked();
+            container.innerHTML = state.pairings.map(pair => {
+                const p1 = playerMap[pair.player1_id];
+                const p2 = playerMap[pair.player2_id];
+                if (!p1 || !p2) return '';
+                const finished = pair.winner_id !== null;
+                const cardClass = finished ? 'pairing-card finished' : 'pairing-card';
+                const winnerClass = (id) => pair.winner_id === id ? 'winner-highlight' : '';
+                const lockAttr = locked ? 'disabled class="locked"' : '';
+                return `
+                <div class="${cardClass}">
+                    <div class="player-slot">
+                        <span class="player-name ${winnerClass(p1.id)}">${escHtml(p1.name)}${raceTagHtml(p1)} <span class="seed">(MMR ${p1.mmr})</span></span>
+                        <span>${finished && pair.winner_id === p1.id ? '' : ''}</span>
+                    </div>
+                    <div class="vs-text">VS </div>
+                    <div class="player-slot">
+                        <span class="player-name ${winnerClass(p2.id)}">${escHtml(p2.name)}${raceTagHtml(p2)} <span class="seed">(MMR ${p2.mmr})</span></span>
+                        <span>${finished && pair.winner_id === p2.id ? '' : ''}</span>
+                    </div>
+                    ${finished ?
+                        `<div style="text-align:center; margin-top:6px;">
+                            <span class="result-indicator">胜者: ${escHtml(pair.winner_id === p1.id ? p1.name : p2.name)}</span>
+                            <button style="margin-left:8px; font-size:0.7rem; padding:4px 8px;" onclick="window.undoResult('${pair.id}')" ${lockAttr}>撤销</button>
+                        </div>`
+                        :
+                        `<div class="result-btn-group">
+                            <button class="result-btn win-btn" onclick="window.recordResult('${pair.id}', ${p1.id})" ${lockAttr}>${escHtml(p1.name)} 胜</button>
+                            <button class="result-btn win-btn" onclick="window.recordResult('${pair.id}', ${p2.id})" ${lockAttr}>${escHtml(p2.name)} 胜</button>
+                        </div>`
+                    }
+                    ${locked && !finished ? `<div style="text-align:center; font-size:0.7rem; color:var(--muted); margin-top:4px;">需解锁后操作</div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function renderButtons() {
+            const nextBtn = document.getElementById('nextRoundBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const locked = !isUnlocked();
+
+            if (state.finished) {
+                nextBtn.disabled = true;
+                nextBtn.className = 'primary locked';
+                nextBtn.textContent = '已结束';
+            } else if (locked) {
+                nextBtn.disabled = true;
+                nextBtn.className = 'primary locked';
+                nextBtn.textContent = '生成下一轮配对';
+            } else {
+                nextBtn.disabled = false;
+                nextBtn.className = 'primary';
+                nextBtn.textContent = '生成下一轮配对';
+            }
+
+            if (locked) {
+                resetBtn.disabled = true;
+                resetBtn.className = 'danger locked';
+            } else {
+                resetBtn.disabled = false;
+                resetBtn.className = 'danger';
+            }
+        }
+
+        function escHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function raceTagHtml(player) {
+            const r = (player.race || '').toLowerCase();
+            if (!r) return '';
+            const icons = { z: '/image/zerg.svg', p: '/image/protoss.svg', t: '/image/terran.svg' };
+            const icon = icons[r];
+            return `<span class="race-tag ${r}">${icon ? `<img src="${icon}" class="race-icon">` : ''}${r.toUpperCase()}</span>`;
+        }
+
+        // ---------- 挂载全局函数 ----------
+        window.recordResult = recordResult;
+        window.undoResult = undoResult;
+        window.nextRound = nextRound;
+        window.resetAll = resetAll;
+        window.toggleLock = toggleLock;
+
+        // ---------- 初始加载 ----------
+        updateLockUI();
+        fetchState().catch(e => {
+            document.getElementById('pairingsContainer').innerHTML =
+                `<div class="error-msg">无法连接服务器<br><small>${escHtml(e.message)}</small></div>`;
+            document.getElementById('roundDisplay').innerHTML = '离线';
+        });
+    })();
+</script>
+</body>
+</html>
