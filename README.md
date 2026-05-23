@@ -35,7 +35,7 @@
 ### 安装启动
 
 ```bash
-git clone https://github.com/你的用户名/SwissCraft.git
+git clone https://github.com/182545780/SwissCraft.git
 cd SwissCraft
 
 pip install -r requirements.txt
